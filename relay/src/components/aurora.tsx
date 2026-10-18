@@ -7,7 +7,7 @@ const TRAIL = 24;
 const VERT = `attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`;
 const FRAG = `
 precision highp float;
-uniform vec2 uRes; uniform float uTime; uniform float uDark; uniform float uIntensity;
+uniform vec2 uRes; uniform float uTime; uniform float uDark; uniform float uIntensity; uniform float uScroll;
 uniform vec3 uTrail[${TRAIL}];
 uniform vec3 uA; uniform vec3 uB; uniform vec3 uG; uniform vec3 uBg;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -16,9 +16,11 @@ float noise(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.03+17.1;a*=.5;}return v;}
 void main(){
   vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y; vec2 p=vec2(uv.x*asp,uv.y);
-  float t=uTime*.045;
+  float t=uTime*.09;
+  // Scroll moves the silk too, so the background never feels static.
+  p.y+=uScroll*.18; p.x+=sin(uScroll*.9)*.05;
   vec2 w=vec2(fbm(p*1.15+vec2(t,-t)),fbm(p*1.15+vec2(-t*.8,t*1.2)+4.2));
-  vec2 q=p+(w-.5)*.6;
+  vec2 q=p+(w-.5)*.68;
   // Silk bands: soft distance to slowly drifting diagonals.
   float s1=exp(-pow((q.x*.72-q.y+.18+.12*sin(t*6.+q.y*2.))*4.2,2.));
   float s2=exp(-pow((q.x*.5+q.y*.95-1.3+.1*cos(t*5.+q.x*1.5))*3.4,2.));
@@ -58,13 +60,17 @@ const PALETTE = {
  * Full-screen cursor-reactive light. Fixed behind content; `intensity` < 1 for app screens
  * so data stays the focus. Half-resolution render, paused when hidden, static under reduced motion.
  */
-export function Aurora({ intensity = 1, cursor = false, className = "pointer-events-none fixed inset-0 -z-10" }: { intensity?: number; cursor?: boolean; className?: string }) {
+export function Aurora({ intensity = 1, darkIntensity, cursor = false, className = "pointer-events-none fixed inset-0 -z-10" }: { intensity?: number; darkIntensity?: number; cursor?: boolean; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = ref.current!;
     const gl = canvas.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power", preserveDrawingBuffer: false });
-    if (!gl) return;
-    const sh = (type: number, src: string) => { const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    if (!gl || gl.isContextLost()) return;
+    const sh = (type: number, src: string) => {
+      const s = gl.createShader(type)!; gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.warn("[aurora] shader:", gl.getShaderInfoLog(s));
+      return s;
+    };
     const prog = gl.createProgram()!;
     gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
     gl.linkProgram(prog);
@@ -74,7 +80,7 @@ export function Aurora({ intensity = 1, cursor = false, className = "pointer-eve
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, "a"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const U = (n: string) => gl.getUniformLocation(prog, n);
-    const u = { res: U("uRes"), time: U("uTime"), dark: U("uDark"), int: U("uIntensity"), trail: U("uTrail"), a: U("uA"), b: U("uB"), g: U("uG"), bg: U("uBg") };
+    const u = { scroll: U("uScroll"), res: U("uRes"), time: U("uTime"), dark: U("uDark"), int: U("uIntensity"), trail: U("uTrail"), a: U("uA"), b: U("uB"), g: U("uG"), bg: U("uBg") };
 
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const SCALE = 0.5;
@@ -97,7 +103,7 @@ export function Aurora({ intensity = 1, cursor = false, className = "pointer-eve
 
     const trail = new Float32Array(TRAIL * 3);
     const t0 = performance.now();
-    let raf = 0;
+    let raf = 0, scrollS = 0;
     const frame = () => {
       raf = requestAnimationFrame(frame);
       if (document.hidden) return;
@@ -107,8 +113,11 @@ export function Aurora({ intensity = 1, cursor = false, className = "pointer-eve
       trail.fill(0);
       pts.forEach((p, i) => { const life = Math.max(0, 1 - (now - p.t) / 1600); trail.set([p.x, p.y, life], i * 3); });
       gl.uniform2f(u.res, canvas.width, canvas.height);
+      const scroller = document.getElementById("app-screen");
+      scrollS += (((scroller ? scroller.scrollTop : scrollY) / innerHeight) - scrollS) * 0.08;
+      gl.uniform1f(u.scroll, scrollS);
       gl.uniform1f(u.time, still ? 40 : (now - t0) / 1000);
-      gl.uniform1f(u.dark, dark ? 1 : 0); gl.uniform1f(u.int, intensity);
+      gl.uniform1f(u.dark, dark ? 1 : 0); gl.uniform1f(u.int, dark ? darkIntensity ?? intensity : intensity);
       gl.uniform3fv(u.trail, trail);
       gl.uniform3fv(u.a, pal.a); gl.uniform3fv(u.b, pal.b); gl.uniform3fv(u.g, pal.g); gl.uniform3fv(u.bg, pal.bg);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -118,8 +127,9 @@ export function Aurora({ intensity = 1, cursor = false, className = "pointer-eve
     // Re-draw once on theme change even when reduced motion stopped the loop.
     const mo = new MutationObserver(() => { if (still) frame(); });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => { cancelAnimationFrame(raf); removeEventListener("resize", resize); removeEventListener("pointermove", onMove); mo.disconnect(); gl.getExtension("WEBGL_lose_context")?.loseContext(); };
-  }, [intensity, cursor]);
+    return () => { cancelAnimationFrame(raf); removeEventListener("resize", resize); removeEventListener("pointermove", onMove); mo.disconnect(); };
+    // No loseContext() here: React (dev) remounts on the same canvas, and a lost context can't be revived.
+  }, [intensity, darkIntensity, cursor]);
   const fixed = className.includes("fixed");
   return <canvas ref={ref} aria-hidden className={className} style={fixed ? { width: "100vw", height: "100vh" } : { width: "100%", height: "100%" }} />;
 }

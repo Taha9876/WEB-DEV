@@ -158,7 +158,7 @@
   --secondary: oklch(0.2 0.025 262);
   --secondary-foreground: var(--foreground);
   --muted: oklch(0.2 0.025 262);
-  --muted-foreground: oklch(0.72 0.02 245);
+  --muted-foreground: oklch(0.75 0.018 245);
   --accent: oklch(0.22 0.03 262);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.7 0.19 25);
@@ -215,7 +215,13 @@
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   }
   .dark .device-frame { box-shadow: 0 30px 70px -30px oklch(0 0 0 / 80%); }
-  .dark .device-frame::before { background: linear-gradient(135deg, #6A6A6E 0%, #3A3A3D 28%, #1B1B1D 72%, #0E0E10 100%); }
+  .dark .device-frame::before { background: linear-gradient(135deg, #9A9AA2 0%, #55555C 24%, #2C2C31 68%, #1A1A1E 100%); }
+  /* Dark mode: a lifted charcoal-navy screen and layered cards, so surfaces separate cleanly. */
+  .dark .device-screen { background: color-mix(in oklch, oklch(0.135 0.016 262) 88%, transparent); }
+  .dark .edge {
+    background: linear-gradient(180deg, oklch(1 0 0 / 5.5%), oklch(1 0 0 / 1.5%)), color-mix(in oklch, oklch(0.17 0.02 262) 72%, transparent);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 7%), 0 0 0 1px oklch(1 0 0 / 7.5%), 0 22px 44px -26px oklch(0 0 0 / 85%);
+  }
   .device-bezel { border-radius: 27px; border: 6px solid #05070a; height: 100%; }
   .device-screen { border-radius: 21px; height: 100%; overflow: hidden; background: color-mix(in oklch, var(--background) 55%, transparent); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   .grain::after {
@@ -251,3 +257,16 @@
 
 /* Device screen: countdown rings drain and refill like live timers. */
 @keyframes dev-tick { from { stroke-dashoffset: 0; } to { stroke-dashoffset: var(--c); } }
+
+/* Assistant answers: compact, readable markdown. */
+.assistant-md { line-height: 1.6; }
+.assistant-md > * + * { margin-top: 0.6em; }
+.assistant-md h1, .assistant-md h2, .assistant-md h3 { font-weight: 600; letter-spacing: -0.01em; font-size: 0.95rem; margin-top: 0.9em; }
+.assistant-md ul { list-style: disc; padding-left: 1.2em; }
+.assistant-md ol { list-style: decimal; padding-left: 1.2em; }
+.assistant-md li + li { margin-top: 0.2em; }
+.assistant-md strong { font-weight: 600; color: var(--foreground); }
+.assistant-md code { font-family: var(--font-geist-mono); font-size: 0.85em; background: color-mix(in oklch, var(--foreground) 7%, transparent); padding: 0.1em 0.35em; border-radius: 0.35em; }
+.assistant-md table { width: 100%; border-collapse: collapse; font-size: 0.85em; display: block; overflow-x: auto; }
+.assistant-md th, .assistant-md td { border-bottom: 1px solid var(--hairline); padding: 0.35em 0.5em; text-align: left; white-space: nowrap; }
+.assistant-md th { color: var(--muted-foreground); font-weight: 500; }

@@ -360,11 +360,52 @@ function CTA() {
 }
 
 function Footer() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["40%", "0%"]);
+  const o = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
+  const [health, setHealth] = useState<"checking" | "ok" | "down">("checking");
+  useEffect(() => { fetch("/api/health").then((r) => setHealth(r.ok ? "ok" : "down")).catch(() => setHealth("down")); }, []);
+  const cols: [string, [string, string][]][] = [
+    ["Product", [["How it works", "#how"], ["Platform", "#platform"], ["Relay AI", "#ai"], ["Integrations", "#integrations"]]],
+    ["Platform", [["Lead protection", "/signup"], ["Customizable CRM", "/signup"], ["Live dashboard", "/signup"], ["Audit history", "/signup"]]],
+    ["Get started", [["Create a workspace", "/signup"], ["Sign in", "/login"], ["Public web form", "/signup"], ["Invite your team", "/signup"]]],
+  ];
   return (
-    <footer className="border-t border-hairline">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:px-6">
-        <span className="flex items-center gap-2"><Logo className="size-5" /> Relay — Team 65</span>
-        <span>Built for the Unified Business Management Platform challenge.</span>
+    <footer ref={ref} className="relative overflow-hidden px-3 pb-3">
+      <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-hairline bg-background/45 shadow-[var(--shadow-edge)] backdrop-blur-2xl">
+        <div className="grid gap-10 px-6 py-12 md:grid-cols-[1.3fr_repeat(3,1fr)] md:px-10">
+          <div>
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Logo /> Relay</Link>
+            <p className="mt-3 max-w-xs text-sm text-muted-foreground">Every inbound lead gets one accountable owner, a deadline and a reply — with WhatsApp, payments and calendars on the same record.</p>
+            <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-hairline bg-background/60 px-3 py-1 text-xs text-muted-foreground" role="status">
+              <span className={`size-2 rounded-full ${health === "ok" ? "animate-pulse bg-ok" : health === "down" ? "bg-destructive" : "bg-warn"}`} />
+              {health === "ok" ? "All systems operational" : health === "down" ? "Service degraded" : "Checking status…"}
+            </p>
+          </div>
+          {cols.map(([h, links], ci) => (
+            <motion.nav key={h} aria-label={h} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: ci * 0.08, duration: 0.7, ease: EASE }}>
+              <p className="text-sm font-semibold">{h}</p>
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {links.map(([l, href]) => (
+                  <li key={l}><Link href={href} className="group inline-flex items-center gap-1 transition-colors hover:text-foreground">
+                    <span className="h-px w-0 bg-signal transition-all duration-300 group-hover:w-3" />{l}</Link></li>
+                ))}
+              </ul>
+            </motion.nav>
+          ))}
+        </div>
+        <div className="relative h-[clamp(5rem,16vw,13rem)] overflow-hidden border-t border-hairline" aria-hidden>
+          <motion.p style={{ y, opacity: o, backgroundImage: "linear-gradient(180deg, color-mix(in oklch, var(--signal) 55%, transparent), color-mix(in oklch, var(--accent-text) 18%, transparent) 70%, transparent)",
+            WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", WebkitTextStroke: "1px color-mix(in oklch, var(--foreground) 14%, transparent)" }}
+            className="absolute inset-x-0 -bottom-[0.18em] select-none text-center font-display text-[clamp(6rem,22vw,19rem)] leading-none">
+            Relay
+          </motion.p>
+        </div>
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-hairline px-6 py-5 text-xs text-muted-foreground sm:flex-row md:px-10">
+          <span>© {new Date().getFullYear()} Relay · Team 65 · Built for the Unified Business Management Platform challenge</span>
+          <span className="flex items-center gap-3"><a href="#top" onClick={(e) => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); }} className="hover:text-foreground">Back to top ↑</a><ThemeToggle /></span>
+        </div>
       </div>
     </footer>
   );

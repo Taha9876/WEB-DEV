@@ -17,6 +17,7 @@ import { addNoteAction, createOpportunityAction, deleteContactAction, updateCont
 import { ConversationPanel } from "@/components/inbox/conversation-panel";
 import { PaymentsPanel } from "@/components/payments/payments-panel";
 import { AppointmentsPanel } from "@/components/calendar/appointments-panel";
+import { askRelay } from "@/components/assistant/assistant";
 
 /* Shapes mirror getContactView() after JSON serialisation. */
 type V = {
@@ -69,9 +70,14 @@ export function ContactDetail({ v, pipelines, companies, team, me, can, intent }
               {c.tags.length > 0 && <div className="mt-2.5 flex flex-wrap gap-1.5">{c.tags.map((t) => <span key={t} className="rounded-full border border-hairline px-2 py-0.5 text-[11px] text-muted-foreground">{t}</span>)}</div>}
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => askRelay(`Summarize the customer ${name} (contact id ${c.id}): status, deals, payments, appointments, conversation and the next best action.`)}
+            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-signal/30 bg-signal/10 px-4 text-sm font-medium transition-colors hover:bg-signal/15">
+            <Sparkles className="size-4 text-signal" /> Summarize customer</button>
           <div className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface/60 px-4 py-3">
             <span className="text-xs text-muted-foreground">Assigned to</span>
             {v.owner?.name ? <span className="flex items-center gap-2 text-sm"><Avatar name={v.owner.name} />{v.owner.name}{v.owner.status && <StatusDot status={v.owner.status} />}</span> : <span className="text-sm text-ember">Nobody</span>}
+          </div>
           </div>
         </div>
       </header>

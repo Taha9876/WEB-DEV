@@ -27,7 +27,7 @@ Demo login: **owner@sunrise.solar / relay-demo-2026**. Other users are printed b
 | `ENCRYPTION_KEY` | yes | 32 random bytes as base64. Encrypts integration secrets and OAuth tokens at rest. `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 | `APP_URL` | yes | Public base URL. Webhooks are signed against it, so set it to your tunnel URL when testing providers. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | for calendar | OAuth client of type *Web application*; redirect URI `APP_URL/api/integrations/google/callback`. |
-| `ANTHROPIC_API_KEY` | for AI | Enables lead triage, reply drafting, AI first response and the manager briefing. Everything else works without it. |
+| `GROQ_API_KEY` / `GROQ_MODEL` | for AI | Free key from console.groq.com. Enables the Relay Assistant chatbot, lead triage, reply drafting, AI first response and the team briefing. Default model `openai/gpt-oss-120b`. Everything else works without it. |
 
 Twilio, Stripe and Telegram credentials are **not** environment variables. Each workspace enters its own on **Settings → Integrations**, where they are verified against the provider, encrypted, and never sent back to the browser.
 
@@ -105,9 +105,10 @@ scripts/                seed, scenario tests, browser tests
 
 ## AI features (beyond the brief)
 
-- **Lead triage:** on intake, Claude scores urgency (0–100), states the intent and a one-line summary in the customer's language, and fills empty custom fields only with what the customer actually said.
-- **AI first response:** on a lead's first escalation, if nobody has written yet, an automated and clearly labelled WhatsApp acknowledgement goes out. The human owner still owns the lead.
-- **Reply copilot:** drafts the next WhatsApp message from the whole record (stage, payments, appointments, thread). A human always presses send.
-- **Team briefing:** a manager summary generated only from the live dashboard numbers.
+All AI runs on **Groq's free tier** (`openai/gpt-oss-120b`, OpenAI-compatible API). It is optional, and an AI failure never blocks the core flows.
 
-All AI calls use `claude-opus-5-5` with structured outputs and server-side refusal fallback. They are optional, and failures never block the core flows.
+- **Relay Assistant** (Ctrl/⌘ K, or "Ask Relay" in the app). A tool-calling chatbot over live workspace data: daily summaries, "what needs attention", team status, pipeline and payment reports, escalations, and one-click customer summaries. Every tool calls the same permission-checked domain functions the UI uses, so value masking and record visibility apply. Tool output is passed to the model as data, never as instructions.
+- **Lead triage:** on intake, the model scores urgency (0–100), states the intent and a one-line summary, and fills empty custom fields only with what the customer actually said.
+- **AI first response:** on a lead's first escalation, if nobody has written yet, an automated and clearly labelled WhatsApp acknowledgement goes out. The human owner still owns the lead.
+- **Reply copilot:** drafts the next WhatsApp message from the whole record. A human always presses send.
+- **Team briefing:** a manager summary generated only from the live dashboard numbers.

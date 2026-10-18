@@ -12,6 +12,7 @@ import {
 import { Logo } from "@/components/landing/landing";
 import { Aurora } from "@/components/aurora";
 import { Smoke } from "@/components/smoke";
+import { Assistant } from "@/components/assistant/assistant";
 import { ThemeToggle } from "@/components/theme";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -51,7 +52,7 @@ export function AppShell({ me, workspace, perms, children }: { me: Me; workspace
   return (
     <div className="flex h-dvh overflow-hidden">
       {/* The same cursor light as the landing page, dimmed so data stays the focus. */}
-      <Aurora intensity={0.78} />
+      <Aurora intensity={0.78} darkIntensity={0.5} />
       <Smoke />
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar backdrop-blur-2xl lg:flex">
         <WorkspaceHeader workspace={workspace} />
@@ -80,6 +81,7 @@ export function AppShell({ me, workspace, perms, children }: { me: Me; workspace
           </div>
         </div>
       </div>
+      <Assistant firstName={me.name.split(" ")[0]} />
     </div>
   );
 }

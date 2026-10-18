@@ -1,0 +1,22 @@
+// Drives the assistant in a real browser. Usage: node scripts/assistant-test.mjs <shot-dir> <theme> <email> <password> "<prompt>"
+import { chromium } from "playwright-core";
+const [out, theme, email, password, prompt] = process.argv.slice(2);
+const b = await chromium.launch({ channel: "msedge", headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: theme });
+const page = await ctx.newPage(); const errs = []; page.on("pageerror", (e) => errs.push(e.message));
+await page.goto("http://localhost:3000/login");
+await page.fill("#f-email", email); await page.fill("#f-password", password);
+await page.click("button:has-text('Sign in')"); await page.waitForURL("**/dashboard", { timeout: 30000 });
+await page.keyboard.press("Control+k");
+await page.getByRole("dialog", { name: "Relay Assistant" }).waitFor();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${out}/A-${theme}-open.png` });
+const t0 = Date.now();
+await page.fill("#assistant-input", prompt); await page.keyboard.press("Enter");
+await page.locator(".assistant-md").first().waitFor({ timeout: 90000 });
+console.log("answered in", Date.now() - t0, "ms");
+await page.waitForTimeout(800);
+await page.screenshot({ path: `${out}/A-${theme}-answer.png` });
+console.log((await page.locator(".assistant-md").last().innerText()).slice(0, 900));
+console.log(errs.length ? errs.slice(0, 3) : "no page errors");
+await b.close();

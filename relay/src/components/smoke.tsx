@@ -54,7 +54,7 @@ export function Smoke({ className = "pointer-events-none fixed inset-0 -z-[5]" }
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = ref.current!;
     const gl = canvas.getContext("webgl2", { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false });
-    if (!gl || !gl.getExtension("EXT_color_buffer_float")) return; // graceful: aurora still runs
+    if (!gl || gl.isContextLost() || !gl.getExtension("EXT_color_buffer_float")) return; // graceful: aurora still runs
     gl.getExtension("OES_texture_float_linear");
 
     const compile = (fs: string) => {
@@ -189,7 +189,7 @@ export function Smoke({ className = "pointer-events-none fixed inset-0 -z-[5]" }
       blit(null, canvas.width, canvas.height);
     };
     frame();
-    return () => { cancelAnimationFrame(raf); clearInterval(recolor); removeEventListener("pointermove", onMove); removeEventListener("resize", init); gl.getExtension("WEBGL_lose_context")?.loseContext(); };
+    return () => { cancelAnimationFrame(raf); clearInterval(recolor); removeEventListener("pointermove", onMove); removeEventListener("resize", init); };
   }, []);
   return <canvas ref={ref} aria-hidden className={className} style={{ width: "100vw", height: "100vh" }} />;
 }
