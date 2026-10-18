@@ -3,21 +3,25 @@ import { alias } from "drizzle-orm/pg-core";
 import { db, schema } from "../db";
 import type { Ctx } from "../context";
 import { notFound } from "../errors";
+import { startOfToday } from "./metrics";
 
 const { leads, contacts, users, leadAssignments } = schema;
 
 /** Users without team-wide visibility only see leads they own (F1.2, I1.6). */
 export const seesAll = (ctx: Ctx) => ctx.can("crm.view_all") || ctx.can("leads.manage");
 
-export type LeadFilter = "open" | "mine" | "unassigned" | "acknowledged" | "closed" | "all";
+export type LeadFilter = "open" | "mine" | "unassigned" | "acknowledged" | "closed" | "all" | "today" | "escalated";
 
 export async function listLeads(ctx: Ctx, filter: LeadFilter = "open", page = 1, pageSize = 50) {
   const conds: (SQL | undefined)[] = [eq(leads.workspaceId, ctx.workspaceId)];
-  if (!seesAll(ctx) || filter === "mine") conds.push(eq(leads.ownerId, ctx.userId));
+  if ((!seesAll(ctx) && filter !== "escalated") || filter === "mine") conds.push(eq(leads.ownerId, ctx.userId));
   if (filter === "open" || filter === "mine") conds.push(inArray(leads.status, ["unassigned", "assigned", "acknowledged"]));
   if (filter === "unassigned") conds.push(eq(leads.status, "unassigned"));
   if (filter === "acknowledged") conds.push(eq(leads.status, "acknowledged"));
   if (filter === "closed") conds.push(eq(leads.status, "closed"));
+  // Drill-downs from the dashboard use exactly the dashboard's definitions (F5.2).
+  if (filter === "today") conds.push(sql`${leads.createdAt} >= ${startOfToday(ctx.user.timezone)}`);
+  if (filter === "escalated") conds.push(sql`exists (select 1 from lead_assignments a where a.lead_id = ${leads.id} and a.kind = 'escalation' and a.assigned_at >= now() - interval '24 hours'${seesAll(ctx) ? sql`` : sql` and a.user_id = ${ctx.userId}`})`);
 
   const rows = await db
     .select({

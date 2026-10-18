@@ -1,9 +1,15 @@
 import { requireCtx } from "@/server/context";
-import { PageHeader } from "@/components/app/primitives";
+import { dashboard } from "@/server/domain/metrics";
+import { aiEnabled } from "@/server/ai";
+import { DashboardView } from "@/components/dashboard/dashboard-view";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const ctx = await requireCtx();
-  return <PageHeader title={<>Good to see you, <em className="italic">{ctx.user.name.split(" ")[0]}</em></>} description="Live overview" />;
+  const d = await dashboard(ctx);
+  return (
+    <DashboardView d={JSON.parse(JSON.stringify(d))} name={ctx.user.name.split(" ")[0]} prefs={ctx.user.dashboardPrefs}
+      canBrief={ctx.can("leads.manage") && aiEnabled()} currency="USD" />
+  );
 }

@@ -199,9 +199,9 @@ export async function reassign(workspaceId: string, leadId: string, toUserId: st
 }
 
 /** F3.6 — going On leave / Offline moves unacknowledged leads now; acknowledged ones per workspace policy. */
-export async function handleAbsence(workspaceId: string, userId: string, actorId: string | null) {
+export async function handleAbsence(workspaceId: string, userId: string, actorId: string | null, includeAcknowledged = false) {
   const s = await getSettings(workspaceId);
-  const statuses: Lead["status"][] = s.acknowledgedOnAbsence === "reassign" ? ["assigned", "acknowledged"] : ["assigned"];
+  const statuses: Lead["status"][] = includeAcknowledged || s.acknowledgedOnAbsence === "reassign" ? ["assigned", "acknowledged"] : ["assigned"];
   const ids = await db.select({ id: leads.id }).from(leads)
     .where(and(eq(leads.workspaceId, workspaceId), eq(leads.ownerId, userId), inArray(leads.status, statuses)));
   for (const { id } of ids) {
@@ -315,4 +315,21 @@ export async function recoveryQueue(workspaceId: string, ownerId?: string) {
     if (new Date(r.last_touch).getTime() < now - s.idleSeconds * 1000) reasons.push("No recorded action within idle period");
     return { ...r, reasons };
   });
+}
+
+/** F3.3 / F3.5 / F3.6 — configurable rules; every change audited with before/after. */
+export async function updateRules(ctx: import("../context").Ctx, input: {
+  maxOpenLeads: number; ackWindowSeconds: number; idleSeconds: number; acknowledgedOnAbsence: "keep" | "reassign"; aiFirstResponse: boolean; escalationChain: EscalationStep[];
+}) {
+  ctx.require("leads.rules", "manage assignment rules");
+  const ids = input.escalationChain.map((s) => s.userId).filter(Boolean) as string[];
+  if (ids.length) {
+    const found = await db.select({ id: users.id }).from(users).where(and(eq(users.workspaceId, ctx.workspaceId), inArray(users.id, ids)));
+    if (found.length !== new Set(ids).size) throw notFound("Employee in escalation chain");
+  }
+  for (const s of input.escalationChain) if (s.type !== "next_eligible" && !s.userId) throw forbidden(`save a ${s.type} step without choosing who it is`);
+  const before = await getSettings(ctx.workspaceId);
+  await db.update(leadSettings).set({ ...input, updatedAt: new Date() }).where(eq(leadSettings.workspaceId, ctx.workspaceId));
+  const { webFormKey: _k, updatedAt: _u, workspaceId: _w, ...b } = before;
+  await audit({ workspaceId: ctx.workspaceId, actorId: ctx.userId, action: "rules.updated", targetType: "lead_settings", targetId: ctx.workspaceId, before: b, after: input });
 }

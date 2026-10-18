@@ -3,7 +3,7 @@ import { listLeads, seesAll, teamForAssignment, type LeadFilter } from "@/server
 import { LeadsView } from "@/components/leads/leads-view";
 
 export const metadata = { title: "Leads" };
-const FILTERS: LeadFilter[] = ["open", "mine", "unassigned", "acknowledged", "closed", "all"];
+const FILTERS: LeadFilter[] = ["open", "mine", "unassigned", "acknowledged", "closed", "all", "today", "escalated"];
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<{ f?: string; p?: string }> }) {
   const ctx = await requireCtx();

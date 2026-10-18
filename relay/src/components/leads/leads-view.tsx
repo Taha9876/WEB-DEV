@@ -22,6 +22,7 @@ type Member = { id: string; name: string; status: Status };
 const TABS = [
   { k: "open", l: "Open" }, { k: "mine", l: "Mine" }, { k: "unassigned", l: "Unassigned" },
   { k: "acknowledged", l: "Acknowledged" }, { k: "closed", l: "Closed" }, { k: "all", l: "All" },
+  { k: "today", l: "New today" }, { k: "escalated", l: "Escalated · 24h" },
 ];
 const PAGE = 50;
 
