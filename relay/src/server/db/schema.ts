@@ -16,7 +16,7 @@ export const availabilityEnum = pgEnum("availability", ["available", "busy", "on
 export const fieldEntityEnum = pgEnum("field_entity", ["contact", "company", "opportunity"]);
 export const fieldTypeEnum = pgEnum("field_type", ["text", "number", "date", "dropdown", "checkbox"]);
 export const stageKindEnum = pgEnum("stage_kind", ["open", "won", "lost"]);
-export const leadSourceEnum = pgEnum("lead_source", ["web_form", "whatsapp", "sms", "manual"]);
+export const leadSourceEnum = pgEnum("lead_source", ["web_form", "whatsapp", "sms", "manual", "telegram"]);
 export const leadStatusEnum = pgEnum("lead_status", ["unassigned", "assigned", "acknowledged", "closed"]);
 export const assignmentKindEnum = pgEnum("assignment_kind", ["initial", "escalation", "manual", "absence", "recovery"]);
 export const msgDirectionEnum = pgEnum("msg_direction", ["inbound", "outbound"]);
@@ -111,6 +111,8 @@ export const contacts = pgTable("contacts", {
   lastName: text("last_name"),
   email: text("email"),
   phone: text("phone"), // E.164
+  /** Telegram chat id when the customer contacts us through the bot (free messaging channel). */
+  telegramChatId: text("telegram_chat_id"),
   tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
   optedOut: boolean("opted_out").notNull().default(false),
   optedOutAt: ts("opted_out_at"),
@@ -121,6 +123,7 @@ export const contacts = pgTable("contacts", {
 }, (t) => [
   index("contacts_ws").on(t.workspaceId),
   uniqueIndex("contacts_ws_phone").on(t.workspaceId, t.phone),
+  uniqueIndex("contacts_ws_tg").on(t.workspaceId, t.telegramChatId),
 ]);
 
 export const pipelines = pgTable("pipelines", {

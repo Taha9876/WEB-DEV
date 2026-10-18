@@ -12,7 +12,7 @@ import { acknowledgeAction, reassignAction } from "@/app/(app)/_actions/leads";
 import { dateTime } from "@/lib/format";
 
 type L = {
-  lead: { id: string; status: string; source: "web_form" | "whatsapp" | "sms" | "manual"; message: string | null; ownerId: string | null; ackDeadline: string | null; assignedAt: string | null;
+  lead: { id: string; status: string; source: "web_form" | "whatsapp" | "sms" | "manual" | "telegram"; message: string | null; ownerId: string | null; ackDeadline: string | null; assignedAt: string | null;
     firstAssignedAt: string | null; firstAcknowledgedAt: string | null; escalationLevel: number; escalationCount: number; exhaustedAt: string | null; createdAt: string;
     ai: { intent: string; urgency: number; language: string; summary: string; tags: string[] } | null };
   contact: { id: string; firstName: string; lastName: string | null; phone: string | null; email: string | null };

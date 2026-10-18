@@ -12,7 +12,7 @@ import { acknowledgeAction, reassignAction } from "@/app/(app)/_actions/leads";
 import { NewLeadDialog } from "./new-lead-dialog";
 
 type Row = {
-  id: string; status: "unassigned" | "assigned" | "acknowledged" | "closed"; source: "web_form" | "whatsapp" | "sms" | "manual";
+  id: string; status: "unassigned" | "assigned" | "acknowledged" | "closed"; source: "web_form" | "whatsapp" | "sms" | "manual" | "telegram";
   message: string | null; ownerId: string | null; ownerName: string | null; ownerStatus: Status | null;
   ackDeadline: number | null; assignedAt: number | null; escalationCount: number; exhaustedAt: number | null; createdAt: number;
   contactId: string; firstName: string; lastName: string | null; phone: string | null;

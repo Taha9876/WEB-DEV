@@ -50,7 +50,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
               </div>
               <span className="text-xs text-muted-foreground">Assigned to {active.owner?.name ?? "nobody"}</span>
             </div>
-            <ConversationPanel compact contactId={active.contact.id} optedOut={active.contact.optedOut} hasPhone={!!active.contact.phone} conversations={ser(active.conversations)} />
+            <ConversationPanel compact contactId={active.contact.id} optedOut={active.contact.optedOut} hasPhone={!!active.contact.phone} hasTelegram={!!active.contact.telegramChatId} conversations={ser(active.conversations)} />
           </>
         ) : <EmptyState icon={Inbox} title="Pick a conversation" body="Select a thread on the left." />}
       </section>

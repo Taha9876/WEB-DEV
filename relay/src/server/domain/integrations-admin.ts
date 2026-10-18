@@ -5,9 +5,9 @@ import { AppError, conflict, invalid } from "../errors";
 import { mask, randomToken } from "../crypto";
 import { disconnect, saveConnection, logEvent, type Provider } from "../integrations/store";
 import { testTwilio, twilioWebhookUrl } from "../integrations/twilio";
-import { testStripe, stripeWebhookUrl } from "./payments";
+import { testStripe, stripeWebhookUrl, stripeClient, STRIPE_EVENTS } from "./payments";
 import { setupTelegram } from "../integrations/telegram";
-import { googleConfigured } from "../integrations/google";
+import { googleConfigured, googleRedirectUri } from "../integrations/google";
 import { env } from "../env";
 
 /** I5.6 — what each integration can and cannot do, shown verbatim in the UI. */
@@ -54,8 +54,9 @@ export async function overview(ctx: Ctx) {
       errors: recentErrors.filter((e) => e.provider === p).slice(0, 5).map((e) => ({ at: e.createdAt, kind: e.kind, error: e.error, reference: e.reference })),
       limits: LIMITS[p],
       webhooks: p === "twilio" ? { "When a message comes in": twilioWebhookUrl(ctx.workspaceId, "inbound"), "Status callback (set automatically)": twilioWebhookUrl(ctx.workspaceId, "status") }
-        : p === "stripe" ? { "Endpoint URL": stripeWebhookUrl(ctx.workspaceId), Events: "checkout.session.completed, checkout.session.expired, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, payment_intent.payment_failed, charge.refunded" }
-        : p === "google" ? { "Authorised redirect URI": `${env.APP_URL}/api/integrations/google/callback` } : {},
+        : p === "stripe" ? { "Endpoint URL (created for you on connect)": stripeWebhookUrl(ctx.workspaceId), Events: STRIPE_EVENTS.join(", ") }
+        : p === "google" ? { "Authorised redirect URI": googleRedirectUri() }
+        : p === "telegram" ? { "Webhook (set automatically)": `${env.APP_URL}/api/webhooks/telegram/${ctx.workspaceId}` } : {},
       team: p === "google" ? team.map((t) => ({ name: t.name, status: t.calendar ?? "not_connected", detail: t.googleEmail ?? "" }))
         : p === "telegram" ? team.map((t) => ({ name: t.name, status: t.telegram ? "connected" : "not_connected", detail: t.telegram ? "chat linked" : "" })) : [],
     };
@@ -63,7 +64,7 @@ export async function overview(ctx: Ctx) {
 }
 
 const fields: Record<Exclude<Provider, "google" | "email">, string[]> = {
-  twilio: ["accountSid", "authToken", "from"], stripe: ["secretKey", "webhookSecret"], telegram: ["botToken"],
+  twilio: ["accountSid", "authToken", "from"], stripe: ["secretKey"], telegram: ["botToken"],
 };
 
 /** I5.2 / I5.3 / I5.7 — validates credentials against the provider before saving; secrets are encrypted, audit stores only masked tails. */
@@ -80,8 +81,15 @@ export async function connect(ctx: Ctx, provider: Exclude<Provider, "google" | "
       const name = await testTwilio(v as never);
       await saveConnection(ctx.workspaceId, "twilio", { ...v, from: `whatsapp:${from}` }, { account: name, accountSid: mask(v.accountSid), from }, ctx.userId);
     } else if (provider === "stripe") {
-      const mode = await testStripe(v as never);
-      await saveConnection(ctx.workspaceId, "stripe", v, { mode, key: mask(v.secretKey) }, ctx.userId);
+      // Only the secret key is needed: Relay creates its own webhook endpoint and keeps the signing secret.
+      let webhookSecret = String(input.webhookSecret ?? "").trim(), endpointId = "";
+      if (!webhookSecret) {
+        if (!env.APP_URL.startsWith("https://")) throw invalid("Stripe needs a public HTTPS address to send webhooks. Start the tunnel (APP_URL), or paste a webhook signing secret (whsec_…).");
+        const ep = await stripeClient(v.secretKey).webhookEndpoints.create({ url: stripeWebhookUrl(ctx.workspaceId), enabled_events: [...STRIPE_EVENTS], description: "Relay (auto-created)" });
+        webhookSecret = ep.secret!; endpointId = ep.id;
+      }
+      const mode = await testStripe({ secretKey: v.secretKey, webhookSecret });
+      await saveConnection(ctx.workspaceId, "stripe", { secretKey: v.secretKey, webhookSecret, endpointId }, { mode, key: mask(v.secretKey), webhook: endpointId ? "auto-created" : "manual" }, ctx.userId);
     } else {
       const webhookSecret = randomToken(24).replace(/[^A-Za-z0-9_-]/g, "");
       const r = await setupTelegram(ctx.workspaceId, v.botToken, webhookSecret);

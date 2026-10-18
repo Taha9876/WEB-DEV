@@ -5,5 +5,7 @@ export async function register() {
     await import("./server/integrations/register");
     ensureListening();
     startWorker();
+    const { syncWebhooks } = await import("./server/integrations/sync");
+    syncWebhooks().catch((e) => console.warn("[sync]", e));
   }
 }

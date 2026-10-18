@@ -7,6 +7,8 @@ const schema = z.object({
   ENCRYPTION_KEY: z.string().refine((v) => Buffer.from(v, "base64").length === 32, "must be 32 bytes base64"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /** Optional: OAuth redirect when browsing on localhost while webhooks use a tunnel URL. */
+  GOOGLE_REDIRECT_URL: z.string().url().optional(),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 });
 

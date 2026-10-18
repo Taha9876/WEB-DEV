@@ -8,12 +8,16 @@ import { createLead, touchLeadsForContact } from "./leads";
 import { normalizePhone } from "@/lib/phone";
 import { registerJob, PermanentError } from "../worker/jobs";
 import { ProviderError, sendWhatsApp } from "../integrations/twilio";
+import { sendTelegram } from "../integrations/telegram-send";
 import { logEvent } from "../integrations/store";
 
 const { contacts, conversations, messages, jobs } = schema;
 const STATUS_RANK: Record<string, number> = { queued: 0, sending: 1, sent: 2, delivered: 3, read: 4, undelivered: 5, failed: 5 };
 const OPT_OUT = /^\s*(stop|unsubscribe|cancel|end|quit)\s*$/i;
 const OPT_IN = /^\s*(start|unstop)\s*$/i;
+
+/** Which channel to answer on: the one the customer used (Telegram chat) or WhatsApp by phone. */
+const channelFor = (c: { telegramChatId: string | null; phone: string | null }) => (c.telegramChatId ? "telegram" : c.phone ? "whatsapp" : null);
 
 async function conversationFor(tx: Tx, workspaceId: string, contactId: string, channel = "whatsapp") {
   await tx.insert(conversations).values({ workspaceId, contactId, channel }).onConflictDoNothing();
@@ -79,9 +83,10 @@ export async function sendMessage(ctx: Ctx, contactId: string, body: string, met
   ctx.require("crm.edit", "message customers");
   const c = await visibleContact(ctx, contactId);
   if (c.optedOut) throw forbidden("message this contact — they opted out (sent STOP). They must message you first to opt back in");
-  if (!c.phone) throw conflict("This contact has no phone number. Add one to start a WhatsApp conversation.");
+  const channel = channelFor(c);
+  if (!channel) throw conflict("This contact has no phone number or Telegram chat. Add a phone number to start a WhatsApp conversation.");
   const out = await db.transaction(async (tx) => {
-    const conv = await conversationFor(tx, ctx.workspaceId, c.id);
+    const conv = await conversationFor(tx, ctx.workspaceId, c.id, channel);
     const [m] = await tx.insert(messages).values({ workspaceId: ctx.workspaceId, conversationId: conv.id, direction: "outbound", body, status: "queued", senderId: ctx.userId }).returning();
     await tx.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id));
     await tx.insert(jobs).values({ workspaceId: ctx.workspaceId, kind: "send_message", payload: { messageId: m.id }, maxAttempts: 4 });
@@ -96,9 +101,10 @@ export async function sendMessage(ctx: Ctx, contactId: string, body: string, met
 /** Automated outbound (no human sender). Same queue, retries and opt-out rules as a human reply. */
 export async function queueSystemMessage(workspaceId: string, contactId: string, body: string, label: string) {
   const [c] = await db.select().from(contacts).where(and(eq(contacts.id, contactId), eq(contacts.workspaceId, workspaceId)));
-  if (!c || c.optedOut || !c.phone) return null;
+  const channel = c ? channelFor(c) : null;
+  if (!c || c.optedOut || !channel) return null;
   const out = await db.transaction(async (tx) => {
-    const conv = await conversationFor(tx, workspaceId, c.id);
+    const conv = await conversationFor(tx, workspaceId, c.id, channel);
     const [m] = await tx.insert(messages).values({ workspaceId, conversationId: conv.id, direction: "outbound", body, status: "queued" }).returning();
     await tx.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id));
     await tx.insert(jobs).values({ workspaceId, kind: "send_message", payload: { messageId: m.id }, maxAttempts: 4 });
@@ -127,7 +133,7 @@ export async function retryMessage(ctx: Ctx, messageId: string) {
 /** Worker: actually send via Twilio. Transient → retry with back-off; permanent or final → visible failure with reason. */
 registerJob("send_message", async (payload, workspaceId, meta) => {
   const id = String(payload.messageId);
-  const [row] = await db.select({ m: messages, phone: contacts.phone, optedOut: contacts.optedOut }).from(messages)
+  const [row] = await db.select({ m: messages, phone: contacts.phone, tg: contacts.telegramChatId, channel: conversations.channel, optedOut: contacts.optedOut }).from(messages)
     .innerJoin(conversations, eq(conversations.id, messages.conversationId)).innerJoin(contacts, eq(contacts.id, conversations.contactId))
     .where(eq(messages.id, id));
   if (!row || row.m.status !== "queued" && row.m.status !== "sending") return;
@@ -136,10 +142,10 @@ registerJob("send_message", async (payload, workspaceId, meta) => {
     await publish(row.m.workspaceId, { type: "message.status", conversationId: row.m.conversationId, messageId: id });
   };
   if (row.optedOut) return fail("Not sent: the contact opted out.");
-  if (!row.phone) return fail("Not sent: the contact has no phone number.");
+  if (row.channel === "telegram" ? !row.tg : !row.phone) return fail(`Not sent: the contact has no ${row.channel === "telegram" ? "Telegram chat" : "phone number"}.`);
   await db.update(messages).set({ status: "sending", attempts: meta.attempt, updatedAt: new Date() }).where(eq(messages.id, id));
   try {
-    const r = await sendWhatsApp(workspaceId!, row.phone, row.m.body, id);
+    const r = row.channel === "telegram" ? await sendTelegram(workspaceId!, row.tg!, row.m.body, id) : await sendWhatsApp(workspaceId!, row.phone!, row.m.body, id);
     await db.update(messages).set({ providerSid: r.sid, status: r.status === "queued" || r.status === "accepted" ? "sent" : (r.status as never), updatedAt: new Date() }).where(eq(messages.id, id));
     await publish(row.m.workspaceId, { type: "message.status", conversationId: row.m.conversationId, messageId: id });
   } catch (e) {
@@ -167,3 +173,38 @@ export async function inbox(ctx: Ctx) {
 }
 
 export { logEvent };
+
+/**
+ * Inbound Telegram message from a customer (free messaging channel). Same rules as WhatsApp:
+ * known chat → attaches to the contact; unknown → new contact + lead; redelivery is ignored.
+ */
+export async function receiveTelegram(workspaceId: string, p: { chatId: string; messageId: number; text: string; firstName?: string; lastName?: string; username?: string }) {
+  const sid = `tg:${p.chatId}:${p.messageId}`;
+  const res = await db.transaction(async (tx) => {
+    const [dupe] = await tx.select({ id: messages.id }).from(messages).where(and(eq(messages.workspaceId, workspaceId), eq(messages.providerSid, sid)));
+    if (dupe) return { duplicate: true as const };
+    let [contact] = await tx.select().from(contacts).where(and(eq(contacts.workspaceId, workspaceId), eq(contacts.telegramChatId, p.chatId)));
+    let isNew = false;
+    if (!contact) {
+      [contact] = await tx.insert(contacts).values({ workspaceId, firstName: p.firstName?.trim() || p.username || "Telegram user", lastName: p.lastName?.trim() || null,
+        telegramChatId: p.chatId, tags: ["telegram"] }).returning();
+      isNew = true;
+    }
+    const conv = await conversationFor(tx, workspaceId, contact.id, "telegram");
+    const inserted = await tx.insert(messages).values({ workspaceId, conversationId: conv.id, direction: "inbound", body: p.text.slice(0, 4000), providerSid: sid, status: "received" })
+      .onConflictDoNothing().returning();
+    if (!inserted.length) return { duplicate: true as const };
+    await tx.update(conversations).set({ lastMessageAt: new Date() }).where(eq(conversations.id, conv.id));
+    await addActivity({ workspaceId, contactId: contact.id, type: "message", summary: `Telegram: “${p.text.slice(0, 140)}”`, data: { messageId: inserted[0].id, direction: "inbound" } }, tx);
+    if (/^\/?stop\s*$/i.test(p.text) && !contact.optedOut) {
+      await tx.update(contacts).set({ optedOut: true, optedOutAt: new Date() }).where(eq(contacts.id, contact.id));
+      await addActivity({ workspaceId, contactId: contact.id, type: "field_edit", summary: "Opted out of messages (sent STOP)" }, tx);
+    } else if (/^\/?start\s*$/i.test(p.text) && contact.optedOut) {
+      await tx.update(contacts).set({ optedOut: false, optedOutAt: null }).where(eq(contacts.id, contact.id));
+    }
+    const lead = isNew ? await createLead({ workspaceId, contactId: contact.id, source: "telegram", message: p.text.slice(0, 2000) }, tx) : null;
+    return { duplicate: false as const, contactId: contact.id, conversationId: conv.id, messageId: inserted[0].id, leadId: lead?.id ?? null, isNew };
+  });
+  if (!res.duplicate) await publish(workspaceId, { type: "message.new", conversationId: res.conversationId, messageId: res.messageId });
+  return res;
+}

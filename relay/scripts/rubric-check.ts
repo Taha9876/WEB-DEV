@@ -78,10 +78,24 @@ async function main() {
   const whsec = "whsec_test_" + tag;
   await saveConnection(A.workspace.id, "stripe", { secretKey: "sk_test_fake", webhookSecret: whsec }, { mode: "test" }, A.owner.id);
   const [pay] = await db.insert(schema.payments).values({ workspaceId: A.workspace.id, opportunityId: opp.id, contactId: contact.id, requestedBy: A.owner.id, amountCents: 125000, currency: "usd", checkoutSessionId: `cs_test_${tag}` }).returning();
+  console.log("\n— 5b/8. Telegram channel (free messaging + alerts)");
+  const tgSecret = "tgsecret" + tag;
+  await saveConnection(A.workspace.id, "telegram", { botToken: "123:fake", webhookSecret: tgSecret }, { botUsername: "relay_test_bot" }, A.owner.id);
+  const turl = `${BASE}/api/webhooks/telegram/${A.workspace.id}`;
+  const upd = { update_id: Number(Date.now() % 1e9), message: { message_id: 7, chat: { id: 555000111, type: "private" }, text: "Hi, I need a quote for solar", from: { first_name: "Tele", last_name: "Gram" } } };
+  const tpost = (body: object, secret = tgSecret) => fetch(turl, { method: "POST", headers: { "Content-Type": "application/json", "X-Telegram-Bot-Api-Secret-Token": secret }, body: JSON.stringify(body) });
+  check("Telegram customer message accepted", (await tpost(upd)).status === 200);
+  check("repeated Telegram update accepted but ignored", (await tpost(upd)).status === 200);
+  const [tgc] = await db.select().from(schema.contacts).where(and(eq(schema.contacts.workspaceId, A.workspace.id), eq(schema.contacts.telegramChatId, "555000111")));
+  const tgLeads = tgc ? await db.select().from(schema.leads).where(eq(schema.leads.contactId, tgc.id)) : [];
+  check("new Telegram chat → contact + exactly one lead (source telegram)", !!tgc && tgLeads.length === 1 && tgLeads[0].source === "telegram", { leads: tgLeads.length });
+  check("forged Telegram secret rejected (403)", (await tpost({ ...upd, update_id: upd.update_id + 1 }, "wrong")).status === 403);
+
   const surl = `${BASE}/api/webhooks/stripe/${A.workspace.id}`;
   const stripePost = (evt: object, secret = whsec) => { const payload = JSON.stringify(evt); return fetch(surl, { method: "POST", headers: { "stripe-signature": Stripe.webhooks.generateTestHeaderString({ payload, secret }), "Content-Type": "application/json" }, body: payload }); };
   const completed = { id: `evt_${tag}_1`, object: "event", type: "checkout.session.completed", livemode: false, data: { object: { id: `cs_test_${tag}`, object: "checkout.session", payment_status: "paid", payment_intent: `pi_${tag}` } } };
-  check("signed payment webhook accepted", (await stripePost(completed)).status === 200);
+  const first = await stripePost(completed);
+  check("signed payment webhook accepted", first.status === 200, { status: first.status, body: (await first.text()).slice(0, 200) });
   let [p] = await db.select().from(schema.payments).where(eq(schema.payments.id, pay.id));
   check("payment marked paid automatically", p.status === "paid" && !!p.paidAt);
   await stripePost(completed);

@@ -1,4 +1,4 @@
-import { Globe, MessageCircle, MessageSquare, PenLine } from "lucide-react";
+import { Globe, MessageCircle, MessageSquare, PenLine, Send } from "lucide-react";
 
 /* Server-safe presentational pieces (no hooks, no client directive). */
 
@@ -19,6 +19,7 @@ const SOURCES = {
   whatsapp: { label: "WhatsApp", icon: MessageCircle },
   sms: { label: "SMS", icon: MessageSquare },
   manual: { label: "Manual", icon: PenLine },
+  telegram: { label: "Telegram", icon: Send },
 } as const;
 
 export function SourceBadge({ source }: { source: keyof typeof SOURCES }) {

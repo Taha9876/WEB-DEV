@@ -10,8 +10,8 @@ const SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.eve
 type Tokens = { access_token?: string | null; refresh_token?: string | null; expiry_date?: number | null; scope?: string };
 
 export const googleConfigured = () => !!(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
-const redirectUri = () => `${env.APP_URL}/api/integrations/google/callback`;
-const oauth = () => new google.auth.OAuth2(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, redirectUri());
+export const googleRedirectUri = () => env.GOOGLE_REDIRECT_URL || `${env.APP_URL}/api/integrations/google/callback`;
+const oauth = () => new google.auth.OAuth2(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, googleRedirectUri());
 
 export class CalendarError extends Error {
   constructor(message: string, public needsReconnect = false, public transient = false) { super(message); }

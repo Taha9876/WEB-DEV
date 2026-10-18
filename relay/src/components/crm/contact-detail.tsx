@@ -21,7 +21,7 @@ import { askRelay } from "@/components/assistant/assistant";
 
 /* Shapes mirror getContactView() after JSON serialisation. */
 type V = {
-  contact: { id: string; firstName: string; lastName: string | null; email: string | null; phone: string | null; tags: string[]; optedOut: boolean; custom: Record<string, unknown>; version: number; companyId: string | null; createdAt: string };
+  contact: { id: string; firstName: string; lastName: string | null; email: string | null; phone: string | null; telegramChatId: string | null; tags: string[]; optedOut: boolean; custom: Record<string, unknown>; version: number; companyId: string | null; createdAt: string };
   company: { id: string; name: string } | null;
   owner: { id: string | null; name: string | null; status: Status | null } | null;
   fields: FieldDef[];
@@ -29,7 +29,7 @@ type V = {
   payments: { id: string; amountCents: number | null; currency: string; status: string; refundedCents: number | null; url: string | null; paidAt: string | null; createdAt: string; opportunityId: string; requestedBy: string | null; reference: string | null; sessionId: string | null }[];
   appointments: { id: string; title: string; startsAt: string; endsAt: string; timezone: string; status: string; userName: string | null; googleEventId: string | null }[];
   conversations: { id: string; channel: string; messages: { id: string; direction: "inbound" | "outbound"; body: string; status: string; errorMessage: string | null; errorCode: string | null; createdAt: string; senderId: string | null }[] }[];
-  leads: { id: string; status: string; source: "web_form" | "whatsapp" | "sms" | "manual"; createdAt: string }[];
+  leads: { id: string; status: string; source: "web_form" | "whatsapp" | "sms" | "manual" | "telegram"; createdAt: string }[];
   activities: { id: string; type: string; summary: string; data: Record<string, unknown>; createdAt: string; actorName: string | null }[];
 };
 
@@ -84,7 +84,7 @@ export function ContactDetail({ v, pipelines, companies, team, me, can, intent }
 
       <div className="grid gap-6 px-4 pt-6 sm:px-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 space-y-6">
-          <ConversationPanel contactId={c.id} optedOut={c.optedOut} hasPhone={!!c.phone} conversations={v.conversations} />
+          <ConversationPanel contactId={c.id} optedOut={c.optedOut} hasPhone={!!c.phone} hasTelegram={!!c.telegramChatId} conversations={v.conversations} />
           <Timeline contactId={c.id} activities={v.activities} canNote={can.edit} />
         </div>
         <aside className="space-y-6">

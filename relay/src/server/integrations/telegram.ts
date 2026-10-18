@@ -4,7 +4,7 @@ import { db, schema } from "../db";
 import { env } from "../env";
 import { safeEqual } from "../crypto";
 import { registerJob, PermanentError } from "../worker/jobs";
-import { explain, getSecrets, logEvent, markError, markOk } from "./store";
+import { claimEvent, explain, getSecrets, logEvent, markError, markOk } from "./store";
 
 export type TelegramSecrets = { botToken: string; webhookSecret: string };
 const API = (token: string, method: string) => `https://api.telegram.org/bot${token}/${method}`;
@@ -87,19 +87,45 @@ registerJob("notify_escalation", async (payload, workspaceId, meta) => {
   }
 });
 
-/** Inbound bot update: /start <token> links the employee's chat (I4.3). */
-export async function handleTelegramUpdate(workspaceId: string, update: { message?: { chat: { id: number }; text?: string; from?: { username?: string } } }) {
+type TgUpdate = { update_id?: number; message?: { message_id: number; chat: { id: number; type?: string }; text?: string; from?: { first_name?: string; last_name?: string; username?: string } } };
+
+/**
+ * Inbound bot update. One bot serves two audiences:
+ *  - employees: `/start <signed token>` links their chat for escalation alerts (I4.3);
+ *  - customers: any other private message is a conversation, and a lead when the chat is new (free messaging channel).
+ */
+export async function handleTelegramUpdate(workspaceId: string, update: TgUpdate) {
   const m = update.message;
-  if (!m?.text?.startsWith("/start")) return "ignored";
+  if (!m?.text || (m.chat.type && m.chat.type !== "private")) return "ignored";
   const s = await getSecrets<TelegramSecrets>(workspaceId, "telegram");
   if (!s) return "not connected";
-  const userId = userFromLinkToken(m.text.split(" ")[1] ?? "");
-  const [u] = userId ? await db.select().from(schema.users).where(and(eq(schema.users.id, userId), eq(schema.users.workspaceId, workspaceId))) : [];
-  if (!u) {
-    await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: "This link isn't valid. Open Relay → Profile & alerts → Connect Telegram to get a fresh one." });
-    return "bad token";
+  // Telegram redelivers on non-2xx/timeouts: process each update once.
+  if (update.update_id != null && !(await claimEvent("telegram", `${workspaceId}:${update.update_id}`, workspaceId))) return "duplicate";
+  const chatId = String(m.chat.id);
+  const [cmd, arg] = m.text.trim().split(/\s+/, 2);
+
+  if (cmd === "/start" && arg) {
+    const userId = userFromLinkToken(arg);
+    const [u] = userId ? await db.select().from(schema.users).where(and(eq(schema.users.id, userId), eq(schema.users.workspaceId, workspaceId))) : [];
+    if (!u) {
+      await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: "This link isn't valid. Open Relay → Profile & alerts → Connect Telegram to get a fresh one." });
+      return "bad token";
+    }
+    await db.update(schema.users).set({ telegramChatId: chatId }).where(eq(schema.users.id, u.id));
+    await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: `✅ Connected, ${u.name.split(" ")[0]}. You'll get a message here whenever a lead is escalated to you.` });
+    return "linked";
   }
-  await db.update(schema.users).set({ telegramChatId: String(m.chat.id) }).where(eq(schema.users.id, u.id));
-  await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: `✅ Connected, ${u.name.split(" ")[0]}. You'll get a message here whenever a lead is escalated to you.` });
-  return "linked";
+  const [staff] = await db.select({ id: schema.users.id }).from(schema.users).where(and(eq(schema.users.workspaceId, workspaceId), eq(schema.users.telegramChatId, chatId)));
+  if (staff) {
+    await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: "This chat receives your Relay escalation alerts. Reply to customers from Relay." });
+    return "staff";
+  }
+  if (cmd === "/start") {
+    const [ws] = await db.select({ name: schema.workspaces.name }).from(schema.workspaces).where(eq(schema.workspaces.id, workspaceId));
+    await tg(s.botToken, "sendMessage", { chat_id: m.chat.id, text: `Hi ${m.from?.first_name ?? "there"} 👋 This is ${ws?.name ?? "our team"}. Tell us what you need and a named person will reply here shortly.` });
+    return "greeted";
+  }
+  const { receiveTelegram } = await import("../domain/messaging");
+  const r = await receiveTelegram(workspaceId, { chatId, messageId: m.message_id, text: m.text, firstName: m.from?.first_name, lastName: m.from?.last_name, username: m.from?.username });
+  return r.duplicate ? "duplicate" : r.isNew ? "new lead" : "message";
 }

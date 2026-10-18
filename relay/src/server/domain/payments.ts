@@ -9,11 +9,12 @@ import { addActivity } from "./activity";
 import { touchLeadsForContact } from "./leads";
 import { explain, getSecrets, isTransient, logEvent, markError, markOk } from "../integrations/store";
 
-export type StripeSecrets = { secretKey: string; webhookSecret: string };
+export type StripeSecrets = { secretKey: string; webhookSecret: string; endpointId?: string };
 const { payments, opportunities, contacts } = schema;
 type Status = (typeof schema.paymentStatusEnum.enumValues)[number];
 
 export const stripeWebhookUrl = (workspaceId: string) => `${env.APP_URL}/api/webhooks/stripe/${workspaceId}`;
+export const STRIPE_EVENTS = ["checkout.session.completed", "checkout.session.expired", "checkout.session.async_payment_succeeded", "checkout.session.async_payment_failed", "payment_intent.payment_failed", "charge.refunded"] as const;
 export const stripeClient = (key: string) => new Stripe(key, { timeout: 15_000, maxNetworkRetries: 2 });
 
 /** Allowed status moves — out-of-order or replayed events can never regress a payment (I2.4/I2.5). */

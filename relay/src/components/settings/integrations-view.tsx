@@ -20,9 +20,9 @@ const META = {
   twilio: { name: "WhatsApp", by: "Twilio Sandbox", icon: MessageCircle, purpose: "Talk to customers and capture leads from incoming messages.",
     fields: [{ k: "accountSid", l: "Account SID", p: "AC…" }, { k: "authToken", l: "Auth token", p: "••••", secret: true }, { k: "from", l: "Sandbox number", p: "+14155238886" }] },
   stripe: { name: "Payments", by: "Stripe · test mode", icon: CreditCard, purpose: "Collect payments for opportunities.",
-    fields: [{ k: "secretKey", l: "Secret key", p: "sk_test_…", secret: true }, { k: "webhookSecret", l: "Webhook signing secret", p: "whsec_…", secret: true }] },
+    fields: [{ k: "secretKey", l: "Secret key (test mode) — the webhook is created for you", p: "sk_test_…", secret: true }] },
   google: { name: "Calendar", by: "Google Calendar · OAuth 2.0", icon: CalendarDays, purpose: "Book appointments on employees' real calendars.", fields: [] },
-  telegram: { name: "Escalation alerts", by: "Telegram bot", icon: Send, purpose: "Alert employees outside the app when a lead escalates.",
+  telegram: { name: "Telegram messaging & alerts", by: "Telegram bot · free", icon: Send, purpose: "Customers message your bot from any phone (becomes a lead, you reply from Relay); employees get escalation alerts.",
     fields: [{ k: "botToken", l: "Bot token from @BotFather", p: "123456:ABC…", secret: true }] },
 } as const;
 
