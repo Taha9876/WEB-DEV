@@ -213,6 +213,8 @@ export const leadSettings = pgTable("lead_settings", {
   idleSeconds: integer("idle_seconds").notNull().default(86400),
   /** What happens to acknowledged leads when the owner goes on leave/offline (F3.6). */
   acknowledgedOnAbsence: text("acknowledged_on_absence").notNull().default("keep"), // keep | reassign
+  /** Send an automated, clearly-labelled WhatsApp acknowledgement when a lead first escalates. */
+  aiFirstResponse: boolean("ai_first_response").notNull().default(true),
   webFormKey: text("web_form_key").notNull().default(sql`replace(gen_random_uuid()::text, '-', '')`),
   updatedAt: updated(),
 });
@@ -237,6 +239,8 @@ export const leads = pgTable("leads", {
   /** Set when the escalation chain ran out; the timer stops and the recovery queue owns it. */
   exhaustedAt: ts("exhausted_at"),
   lastActionAt: ts("last_action_at"),
+  /** AI triage result: { intent, urgency, language, summary, tags } */
+  ai: jsonb("ai").$type<{ intent: string; urgency: number; language: string; summary: string; tags: string[] }>(),
   version: integer("version").notNull().default(1),
   createdAt: created(),
 }, (t) => [

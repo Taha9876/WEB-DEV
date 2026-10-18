@@ -1,7 +1,8 @@
 import { and, eq, lte, sql } from "drizzle-orm";
 import { db, schema } from "../db";
 
-type Handler = (payload: Record<string, unknown>, workspaceId: string | null) => Promise<void>;
+export type JobMeta = { attempt: number; maxAttempts: number; final: boolean };
+type Handler = (payload: Record<string, unknown>, workspaceId: string | null, meta: JobMeta) => Promise<void>;
 const handlers: Record<string, Handler> = {};
 export const registerJob = (kind: string, h: Handler) => { handlers[kind] = h; };
 
@@ -21,7 +22,7 @@ export async function processJobs(limit = 10) {
     const h = handlers[job.kind];
     try {
       if (!h) throw new PermanentError(`No handler for ${job.kind}`);
-      await h(job.payload, job.workspaceId);
+      await h(job.payload, job.workspaceId, { attempt: job.attempts, maxAttempts: job.maxAttempts, final: job.attempts >= job.maxAttempts });
       await db.update(schema.jobs).set({ status: "done", lastError: null, updatedAt: new Date() }).where(eq(schema.jobs.id, id));
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

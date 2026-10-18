@@ -105,6 +105,10 @@ async function setOwner(
     data: { from: lead.ownerId, to: toUserId, kind: o.kind, level: o.level },
   }, tx);
 
+  if (escalated && toUserId && lead.escalationCount === 0) {
+    const s = await getSettings(lead.workspaceId, tx);
+    if (s.aiFirstResponse) await tx.insert(jobs).values({ workspaceId: lead.workspaceId, kind: "ai_first_response", payload: { leadId: lead.id }, maxAttempts: 2 });
+  }
   if (escalated && toUserId) {
     // Durable outbox: the external alert survives restarts and is retried (F3.9, I4.4).
     await tx.insert(jobs).values({
@@ -139,6 +143,7 @@ export async function createLead(input: {
     }).returning();
     await audit({ workspaceId: input.workspaceId, actorId: input.actorId ?? null, action: "lead.created", targetType: "lead", targetId: lead.id, after: { source: input.source } }, tx);
     await addActivity({ workspaceId: input.workspaceId, contactId: input.contactId, leadId: lead.id, actorId: input.actorId ?? null, type: "lead", summary: `New lead from ${input.source.replace("_", " ")}` }, tx);
+    if (input.message?.trim()) await tx.insert(jobs).values({ workspaceId: input.workspaceId, kind: "ai_triage", payload: { leadId: lead.id }, maxAttempts: 3 });
     return assignRoundRobin(tx, lead, "initial", "Round-robin", null);
   };
   const lead = outer ? await run(outer) : await db.transaction(run);
