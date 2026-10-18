@@ -25,7 +25,7 @@ export function PublicForm({ company, action }: { company: string; action: (s: F
             <motion.form key="form" action={formAction} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="edge space-y-4 rounded-3xl p-6 sm:p-8" noValidate>
               <div>
                 <p className="text-sm text-muted-foreground">{company}</p>
-                <h1 className="mt-1 font-display text-4xl leading-none">How can we <em className="italic">help?</em></h1>
+                <h1 className="mt-1 font-display text-4xl leading-none">How can we <em>help?</em></h1>
               </div>
               <div className="absolute -left-[9999px]" aria-hidden><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
               {[["name", "Your name", "text", "name"], ["phone", "Phone (with country code)", "tel", "tel"], ["email", "Email", "email", "email"]].map(([n, l, t, a]) => (

@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { sql } from "./db";
+import { sql, listenSql } from "./db";
 
 /** Cross-process fan-out: any process NOTIFYs, the web server LISTENs and pushes over SSE (Q11). */
 export type RealtimeEvent =
@@ -22,7 +22,7 @@ export const bus = (g.__bus ??= new EventEmitter().setMaxListeners(0));
 export function ensureListening() {
   if (g.__listening) return;
   g.__listening = true;
-  sql.listen(CHANNEL, (payload) => {
+  listenSql().listen(CHANNEL, (payload) => {
     try {
       const { workspaceId, event } = JSON.parse(payload);
       bus.emit(workspaceId, event);

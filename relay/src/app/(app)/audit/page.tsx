@@ -36,7 +36,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="pb-16">
-      <PageHeader title={<>Audit <em className="italic">log</em></>} description="Append-only history of assignments, escalations, permission and configuration changes, integrations and deletions. Entries can't be edited or deleted — not even by the Owner." />
+      <PageHeader title={<>Audit <em>log</em></>} description="Append-only history of assignments, escalations, permission and configuration changes, integrations and deletions. Entries can't be edited or deleted — not even by the Owner." />
       <AuditFilters actions={[...new Set(actions.map((x) => x.action.split(".")[0]))].concat(actions.map((x) => x.action))} team={team} value={sp} />
       {!rows.length ? <EmptyState icon={ScrollText} title="No matching events" body="Try widening the filters." /> : (
         <ol className="divide-y divide-hairline">

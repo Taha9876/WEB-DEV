@@ -18,7 +18,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const ser = <T,>(x: T) => JSON.parse(JSON.stringify(x));
 
   return (
-    <div className="grid h-dvh lg:grid-cols-[22rem_minmax(0,1fr)]">
+    <div className="grid h-full lg:grid-cols-[22rem_minmax(0,1fr)]">
       <aside className={`flex-col border-r border-hairline ${sp.c ? "hidden lg:flex" : "flex"}`}>
         <header className="border-b border-hairline px-5 pb-4 pt-8"><h1 className="font-display text-4xl">Inbox</h1>
           <p className="mt-1 text-xs text-muted-foreground">{ctx.can("crm.view_all") ? "All WhatsApp conversations" : "Conversations with your contacts"}</p></header>

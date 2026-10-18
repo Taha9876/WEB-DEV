@@ -25,7 +25,7 @@ export function RulesView({ s, team, ai, formUrl }: { s: S; team: { id: string; 
 
   return (
     <div className="pb-24">
-      <PageHeader title={<>Assignment <em className="italic">rules</em></>} description="How leads are distributed, how long people have to respond, and who gets it next. Use seconds for a live demo.">
+      <PageHeader title={<>Assignment <em>rules</em></>} description="How leads are distributed, how long people have to respond, and who gets it next. Use seconds for a live demo.">
         <button onClick={save} disabled={pending} className="inline-flex h-9 items-center gap-2 rounded-lg bg-signal px-4 text-sm font-medium text-signal-foreground disabled:opacity-60">{pending && <Loader2 className="size-4 animate-spin" />}Save rules</button>
       </PageHeader>
 

@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-instrument-serif);
+  --font-display: var(--font-geist-sans);
   --font-heading: var(--font-geist-sans);
 
   --color-surface: var(--surface);
@@ -17,6 +17,9 @@
   --color-hairline: var(--hairline);
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
+  --color-accent-text: var(--accent-text);
+  --color-glow-a: var(--glow-a);
+  --color-glow-b: var(--glow-b);
   --color-ember: var(--ember);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
@@ -81,129 +84,158 @@
   }
 }
 
-/* Dark-first product. Light tokens kept for completeness; html carries .dark. */
+/* Two themes from one set of tokens.
+   Light: paper white with mint + cyan light.  Dark: near-black with deep blue silk and green light. */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.985 0.003 95);
-  --foreground: oklch(0.17 0.01 265);
-  --surface: oklch(0.97 0.004 95);
+  --radius: 0.875rem;
+  --background: oklch(0.992 0.003 190);
+  --foreground: oklch(0.2 0.012 230);
+  --surface: oklch(0.975 0.006 190);
   --elevated: oklch(1 0 0);
-  --hairline: oklch(0.17 0.01 265 / 8%);
+  --hairline: oklch(0.2 0.02 230 / 8%);
   --card: oklch(1 0 0);
   --card-foreground: var(--foreground);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--foreground);
-  --signal: oklch(0.62 0.19 130);
-  --signal-foreground: oklch(0.99 0 0);
-  --primary: var(--foreground);
-  --primary-foreground: var(--background);
-  --secondary: oklch(0.95 0.004 95);
+  /* "Signal" — the one accent: deep teal-green in light mode (white text passes AA on it). */
+  --signal: oklch(0.55 0.11 172);
+  --signal-foreground: oklch(0.995 0 0);
+  --accent-text: oklch(0.62 0.085 182);
+  --glow-a: oklch(0.86 0.14 168);   /* mint */
+  --glow-b: oklch(0.82 0.13 210);   /* cyan */
+  --primary: oklch(0.19 0.01 230);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0.006 190);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.95 0.004 95);
-  --muted-foreground: oklch(0.45 0.01 265);
-  --accent: oklch(0.94 0.004 95);
+  --muted: oklch(0.95 0.007 190);
+  --muted-foreground: oklch(0.47 0.015 230);
+  --accent: oklch(0.945 0.012 180);
   --accent-foreground: var(--foreground);
-  --destructive: oklch(0.58 0.22 25);
-  --border: oklch(0.17 0.01 265 / 10%);
-  --input: oklch(0.17 0.01 265 / 14%);
+  --destructive: oklch(0.56 0.21 25);
+  --border: oklch(0.2 0.02 230 / 10%);
+  --input: oklch(0.2 0.02 230 / 13%);
   --ring: var(--signal);
-  --ember: oklch(0.64 0.19 45);
-  --ok: oklch(0.6 0.15 155);
-  --warn: oklch(0.68 0.15 75);
-  --leave: oklch(0.58 0.15 300);
-  --idle: oklch(0.55 0.01 265);
+  --ember: oklch(0.62 0.18 45);
+  --ok: oklch(0.56 0.13 160);
+  --warn: oklch(0.66 0.15 70);
+  --leave: oklch(0.56 0.15 295);
+  --idle: oklch(0.55 0.012 230);
   --chart-1: var(--signal);
-  --chart-2: oklch(0.62 0.12 215);
-  --chart-3: oklch(0.58 0.15 300);
+  --chart-2: oklch(0.6 0.15 245);
+  --chart-3: oklch(0.56 0.15 295);
   --chart-4: var(--ember);
-  --chart-5: oklch(0.55 0.01 265);
-  --sidebar: var(--surface);
+  --chart-5: oklch(0.55 0.012 230);
+  --sidebar: oklch(0.985 0.004 190 / 0.72);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--signal);
   --sidebar-primary-foreground: var(--signal-foreground);
-  --sidebar-accent: var(--accent);
+  --sidebar-accent: oklch(0.2 0.02 230 / 6%);
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  --shadow-edge: 0 1px 2px oklch(0.2 0.02 230 / 6%), 0 18px 40px -20px oklch(0.35 0.06 200 / 25%);
+  color-scheme: light;
 }
 
 .dark {
-  --background: oklch(0.135 0.006 265);
-  --foreground: oklch(0.965 0.004 95);
-  --surface: oklch(0.165 0.007 265);
-  --elevated: oklch(0.2 0.008 265);
-  --hairline: oklch(1 0 0 / 6%);
-  --card: oklch(0.165 0.007 265);
+  --background: oklch(0.11 0.014 262);
+  --foreground: oklch(0.95 0.006 240);
+  --surface: oklch(0.145 0.02 262);
+  --elevated: oklch(0.185 0.026 262);
+  --hairline: oklch(1 0 0 / 7%);
+  --card: oklch(0.145 0.02 262);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.19 0.008 265);
+  --popover: oklch(0.17 0.024 262);
   --popover-foreground: var(--foreground);
-  /* "Signal" — the one loud colour. Reserved for the thing that needs attention. */
-  --signal: oklch(0.91 0.2 125);
-  --signal-foreground: oklch(0.16 0.03 125);
-  --primary: oklch(0.965 0.004 95);
-  --primary-foreground: oklch(0.15 0.006 265);
-  --secondary: oklch(0.22 0.008 265);
+  /* Blue light on black: the accent glows electric azure, and dark text sits on it. */
+  --signal: oklch(0.74 0.16 238);
+  --signal-foreground: oklch(0.15 0.04 260);
+  --accent-text: oklch(0.83 0.1 228);
+  --glow-a: oklch(0.5 0.22 262);    /* deep electric blue */
+  --glow-b: oklch(0.72 0.15 230);   /* azure */
+  --primary: oklch(0.93 0.008 240);
+  --primary-foreground: oklch(0.14 0.02 262);
+  --secondary: oklch(0.2 0.025 262);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.21 0.008 265);
-  --muted-foreground: oklch(0.7 0.012 265);
-  --accent: oklch(0.23 0.009 265);
+  --muted: oklch(0.2 0.025 262);
+  --muted-foreground: oklch(0.72 0.02 245);
+  --accent: oklch(0.22 0.03 262);
   --accent-foreground: var(--foreground);
   --destructive: oklch(0.7 0.19 25);
   --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 13%);
   --ring: var(--signal);
-  --ember: oklch(0.75 0.17 50);
-  --ok: oklch(0.8 0.16 155);
-  --warn: oklch(0.84 0.14 85);
-  --leave: oklch(0.76 0.13 300);
-  --idle: oklch(0.62 0.012 265);
+  --ember: oklch(0.76 0.16 50);
+  --ok: oklch(0.82 0.16 160);
+  --warn: oklch(0.85 0.14 85);
+  --leave: oklch(0.76 0.13 295);
+  --idle: oklch(0.64 0.015 245);
   --chart-1: var(--signal);
-  --chart-2: oklch(0.78 0.11 215);
-  --chart-3: oklch(0.72 0.14 300);
+  --chart-2: oklch(0.7 0.17 250);
+  --chart-3: oklch(0.72 0.14 295);
   --chart-4: var(--ember);
-  --chart-5: oklch(0.55 0.012 265);
-  --sidebar: oklch(0.15 0.006 265);
+  --chart-5: oklch(0.56 0.015 245);
+  --sidebar: oklch(0.12 0.016 262 / 0.7);
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--signal);
   --sidebar-primary-foreground: var(--signal-foreground);
-  --sidebar-accent: oklch(0.21 0.008 265);
+  --sidebar-accent: oklch(1 0 0 / 6%);
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: oklch(1 0 0 / 7%);
   --sidebar-ring: var(--ring);
+  --shadow-edge: inset 0 1px 0 0 oklch(1 0 0 / 6%), 0 24px 48px -24px oklch(0 0 0 / 70%);
+  color-scheme: dark;
 }
 
 @layer base {
   * { @apply border-border outline-ring/60; }
-  html { @apply font-sans; color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+  html { @apply font-sans; -webkit-tap-highlight-color: transparent; }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "cv11";
     text-rendering: optimizeLegibility;
+    transition: background-color 0.5s var(--ease-out-expo), color 0.5s var(--ease-out-expo);
   }
-  ::selection { background: color-mix(in oklch, var(--signal) 35%, transparent); }
+  ::selection { background: color-mix(in oklch, var(--signal) 30%, transparent); }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   .tabular { font-variant-numeric: tabular-nums; }
+  /* Display type: tight, heavy grotesk. An <em> inside it is the two-tone accent, never italic. */
+  .font-display { font-weight: 600; letter-spacing: -0.045em; }
+  .font-display em { font-style: normal; color: var(--accent-text); }
 }
 
 @layer components {
-  /* Film grain — breaks up flat dark gradients so they never band. */
+  /* Device frame for app screens: titanium (light) / graphite (dark) rim and a black bezel, both drawn as
+     rings so the glass screen in the middle shows the theme waves behind it — never a grey slab. */
+  .device-frame { position: relative; border-radius: 30px; padding: 3px; box-shadow: 0 30px 60px -30px oklch(0.3 0.05 200 / 45%); }
+  .device-frame::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 3px; pointer-events: none; z-index: 2;
+    background: linear-gradient(135deg, #F7F5F1 0%, #DCD9D3 28%, #A6A29B 72%, #6F6B65 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+  .dark .device-frame { box-shadow: 0 30px 70px -30px oklch(0 0 0 / 80%); }
+  .dark .device-frame::before { background: linear-gradient(135deg, #6A6A6E 0%, #3A3A3D 28%, #1B1B1D 72%, #0E0E10 100%); }
+  .device-bezel { border-radius: 27px; border: 6px solid #05070a; height: 100%; }
+  .device-screen { border-radius: 21px; height: 100%; overflow: hidden; background: color-mix(in oklch, var(--background) 55%, transparent); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   .grain::after {
     content: ""; pointer-events: none; position: absolute; inset: 0; z-index: 1;
-    opacity: 0.06; mix-blend-mode: overlay;
+    opacity: 0.05; mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  /* Hairline gradient border that catches light from the top. */
+  /* Glass card: translucent so the cursor light shows through, with a hairline that catches light. */
   .edge {
     position: relative; isolation: isolate;
-    background: linear-gradient(180deg, color-mix(in oklch, var(--elevated) 92%, transparent), var(--surface));
-    box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 6%), 0 0 0 1px var(--hairline), 0 24px 48px -24px oklch(0 0 0 / 60%);
+    background: color-mix(in oklch, var(--elevated) 78%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: 0 0 0 1px var(--hairline), var(--shadow-edge);
   }
   .text-gradient {
-    background: linear-gradient(180deg, var(--foreground) 30%, color-mix(in oklch, var(--foreground) 45%, transparent));
+    background: linear-gradient(180deg, var(--foreground) 35%, color-mix(in oklch, var(--foreground) 55%, transparent));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .shimmer {
-    background: linear-gradient(90deg, transparent, oklch(1 0 0 / 6%), transparent);
+    background: linear-gradient(90deg, transparent, color-mix(in oklch, var(--foreground) 6%, transparent), transparent);
     background-size: 200% 100%; animation: var(--animate-shimmer);
   }
   .mask-fade-b { mask-image: linear-gradient(to bottom, black 60%, transparent); }
@@ -213,3 +245,9 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Theme switch: the new snapshot is revealed by a circle (see ThemeToggle); no cross-fade. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+/* Device screen: countdown rings drain and refill like live timers. */
+@keyframes dev-tick { from { stroke-dashoffset: 0; } to { stroke-dashoffset: var(--c); } }

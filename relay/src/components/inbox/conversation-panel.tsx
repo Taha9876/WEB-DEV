@@ -48,7 +48,7 @@ export function ConversationPanel({ contactId, optedOut, hasPhone, conversations
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title="Twilio sandbox only delivers to phones that joined it by sending the join phrase.">
           <Info className="size-3" /> Sandbox: only phones that joined can receive</span>
       </header>
-      <div className={`space-y-2 overflow-y-auto px-4 py-4 ${compact ? "h-[calc(100dvh-16rem)]" : "max-h-[26rem] min-h-40"}`} aria-live="polite">
+      <div className={`space-y-2 overflow-y-auto px-4 py-4 ${compact ? "h-[calc(100dvh-18rem)]" : "max-h-[26rem] min-h-40"}`} aria-live="polite">
         {!msgs.length && <p className="py-8 text-center text-sm text-muted-foreground">No messages yet.</p>}
         <AnimatePresence initial={false}>
           {msgs.map((m) => {

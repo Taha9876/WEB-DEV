@@ -40,7 +40,7 @@ export function DashboardView({ d, name, prefs, canBrief, currency }: { d: D; na
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">{d.scope === "company" ? "Company-wide · live" : "Your numbers · live"}</p>
-            <h1 className="mt-1 font-display text-5xl leading-none md:text-6xl">Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}, <em className="italic">{name}</em></h1>
+            <h1 className="mt-1 font-display text-5xl leading-none md:text-6xl">Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}, <em>{name}</em></h1>
           </div>
           <button onClick={() => setEditing((e) => !e)} aria-pressed={editing} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input px-3 text-sm hover:bg-accent"><Settings2 className="size-4" /> Customize</button>
         </div>

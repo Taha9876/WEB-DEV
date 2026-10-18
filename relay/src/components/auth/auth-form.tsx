@@ -19,7 +19,7 @@ export function AuthForm({ mode, action, fields }: {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
-      <h1 className="font-display text-5xl leading-none">{mode === "login" ? <>Welcome <em className="italic">back</em></> : <>Start your <em className="italic">workspace</em></>}</h1>
+      <h1 className="font-display text-5xl leading-none">{mode === "login" ? <>Welcome <em>back</em></> : <>Start your <em>workspace</em></>}</h1>
       <p className="mt-3 text-sm text-muted-foreground">
         {mode === "login" ? "Sign in to see who owns every lead right now." : "You will be the Owner. Invite your team once you are in."}
       </p>
@@ -61,7 +61,7 @@ function Input({ name, label, type = "text", autoComplete, placeholder, error, d
       <div className="relative">
         <input id={id} name={name} type={isPw && show ? "text" : type} autoComplete={autoComplete} placeholder={placeholder} defaultValue={defaultValue}
           aria-invalid={!!error} aria-describedby={error ? `${id}-err` : undefined}
-          className="h-11 w-full rounded-xl border border-input bg-surface px-3.5 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/60 focus:border-signal/60 focus:shadow-[0_0_0_4px_oklch(0.91_0.2_125/0.12)] aria-invalid:border-destructive/60" />
+          className="h-11 w-full rounded-xl border border-input bg-surface px-3.5 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/60 focus:border-signal/60 focus:shadow-[0_0_0_4px_color-mix(in_oklch,var(--signal)_15%,transparent)] aria-invalid:border-destructive/60" />
         {isPw && (
           <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? "Hide password" : "Show password"}
             className="absolute right-1.5 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:text-foreground">

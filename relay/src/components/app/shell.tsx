@@ -10,6 +10,9 @@ import {
   Menu, Plug, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, Users, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/landing/landing";
+import { Aurora } from "@/components/aurora";
+import { Smoke } from "@/components/smoke";
+import { ThemeToggle } from "@/components/theme";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { logout } from "@/app/(auth)/actions";
@@ -46,26 +49,36 @@ export function AppShell({ me, workspace, perms, children }: { me: Me; workspace
   const [open, setOpen] = useState(false);
   const nav = <SideNav perms={perms} onNavigate={() => setOpen(false)} />;
   return (
-    <div className="flex min-h-dvh">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+    <div className="flex h-dvh overflow-hidden">
+      {/* The same cursor light as the landing page, dimmed so data stays the focus. */}
+      <Aurora intensity={0.78} />
+      <Smoke />
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar backdrop-blur-2xl lg:flex">
         <WorkspaceHeader workspace={workspace} />
         {nav}
         <UserCard me={me} />
       </aside>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="flex w-72 flex-col gap-0 bg-sidebar p-0">
+        <SheetContent side="left" className="flex w-72 flex-col gap-0 bg-background p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <WorkspaceHeader workspace={workspace} />
           {nav}
           <UserCard me={me} />
         </SheetContent>
       </Sheet>
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-hairline bg-background/80 px-4 backdrop-blur-xl lg:hidden">
           <button onClick={() => setOpen(true)} aria-label="Open navigation" className="grid size-9 place-items-center rounded-lg hover:bg-accent"><Menu className="size-5" /></button>
-          <Logo className="size-5" /><span className="font-medium">{workspace}</span>
+          <Logo className="size-5" /><span className="flex-1 font-medium">{workspace}</span><ThemeToggle className="size-8" />
         </header>
-        <main className="min-w-0 flex-1">{children}</main>
+        {/* The workspace sits inside the same device frame as the hero foldable. */}
+        <div className="min-h-0 flex-1 p-1.5 lg:p-3 lg:pl-1.5">
+          <div className="device-frame h-full">
+            <div className="device-bezel">
+              <main id="app-screen" className="device-screen relative overflow-y-auto overscroll-contain">{children}</main>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -75,10 +88,11 @@ function WorkspaceHeader({ workspace }: { workspace: string }) {
   return (
     <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
       <Logo />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium leading-tight">{workspace}</p>
         <p className="text-[11px] text-muted-foreground">Relay workspace</p>
       </div>
+      <ThemeToggle className="size-8" />
     </div>
   );
 }
@@ -100,7 +114,7 @@ function SideNav({ perms, onNavigate }: { perms: string[]; onNavigate: () => voi
                   <li key={i.href}>
                     <Link href={i.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
                       className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${active ? "text-foreground" : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground"}`}>
-                      {active && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-sidebar-accent shadow-[inset_0_1px_0_oklch(1_0_0/0.05)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+                      {active && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-lg bg-sidebar-accent shadow-[inset_0_1px_0_color-mix(in_oklch,var(--foreground)_6%,transparent)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
                       <i.icon className={`relative size-4 ${active ? "text-signal" : ""}`} aria-hidden />
                       <span className="relative">{i.label}</span>
                     </Link>

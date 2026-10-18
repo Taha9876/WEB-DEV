@@ -14,7 +14,7 @@ export default async function RecoveryPage() {
   const rows = await recoveryQueue(ctx.workspaceId, seesAll(ctx) ? undefined : ctx.userId);
   return (
     <div>
-      <PageHeader title={<>Recovery <em className="italic">queue</em></>} description="Leads unacknowledged beyond their window, escalated two or more times, waiting for an owner, or untouched for the idle period." />
+      <PageHeader title={<>Recovery <em>queue</em></>} description="Leads unacknowledged beyond their window, escalated two or more times, waiting for an owner, or untouched for the idle period." />
       {!rows.length ? <EmptyState icon={AlarmClock} title="Nothing at risk" body="Every open lead has an owner who is on time. This page fills itself the moment something slips." /> : (
         <ul className="divide-y divide-hairline">
           {rows.map((r) => (

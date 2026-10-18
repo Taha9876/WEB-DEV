@@ -32,7 +32,7 @@ export function CountdownRing({ deadline, start, now, size = 44 }: { deadline: n
     <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }} role="timer"
       aria-label={left > 0 ? `${fmtDuration(left)} left to acknowledge` : "Acknowledgement window expired"}>
       <svg viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 -rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="oklch(1 0 0 / 0.08)" strokeWidth="2.5" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" className="stroke-foreground/10" strokeWidth="2.5" />
         <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={C}
           animate={{ strokeDashoffset: C * (1 - pct), stroke: tone }} transition={{ duration: 0.25, ease: "linear" }} />
       </svg>

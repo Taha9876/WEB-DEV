@@ -60,7 +60,7 @@ export function Board(p: {
   };
 
   return (
-    <div className="flex h-dvh flex-col lg:h-dvh">
+    <div className="flex h-full flex-col">
       <div className="flex flex-col gap-4 border-b border-hairline px-4 pb-5 pt-8 sm:px-8 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="flex items-center gap-3">

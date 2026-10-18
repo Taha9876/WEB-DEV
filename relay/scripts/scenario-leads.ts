@@ -35,9 +35,11 @@ async function main() {
 
   // 2. Two workers firing together escalate once (F3.8)
   await sleep(1200);
+  // Two workers here — plus the dev server's own worker if it is running — race for the same expiry.
   const [n1, n2] = await Promise.all([L.escalateDue(), L.escalateDue()]);
+  await sleep(3500); // let any in-flight escalation (another worker) commit
   let s1 = await get(l1.id);
-  check("concurrent expiry escalates exactly once", n1 + n2 === 1 && s1.escalationCount === 1, { n1, n2, count: s1.escalationCount });
+  check("concurrent expiry escalates exactly once (across all workers)", n1 + n2 <= 1 && s1.escalationCount === 1, { n1, n2, count: s1.escalationCount });
   check("escalated to a different person", s1.ownerId !== l1.ownerId);
   const assigns = await db.select().from(schema.leadAssignments).where(eq(schema.leadAssignments.leadId, l1.id));
   check("exactly one open assignment row", assigns.filter((x) => !x.endedAt).length === 1, assigns.length);
@@ -51,7 +53,8 @@ async function main() {
   const item = q.find((x) => x.id === l1.id);
   check("in recovery queue with reasons", !!item && item.reasons.length >= 2, item?.reasons);
 
-  // 4. Acknowledge by a non-owner is refused; by owner works
+  // 4. Acknowledge by a non-owner is refused; by owner works (long window so no worker escalates it meanwhile)
+  await db.update(schema.leadSettings).set({ ackWindowSeconds: 120 }).where(eq(schema.leadSettings.workspaceId, ws.id));
   const l2 = await L.createLead({ workspaceId: ws.id, contactId: (await contact("Omar")).id, source: "manual" });
   const other = [a, b, c].find((u) => u.id !== l2.ownerId)!;
   let refused = false;

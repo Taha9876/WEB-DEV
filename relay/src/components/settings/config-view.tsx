@@ -43,7 +43,7 @@ export function ConfigView({ pipelines, fields }: { pipelines: Pipe[]; fields: F
 
   return (
     <div className="pb-16">
-      <PageHeader title={<>Pipelines &amp; <em className="italic">fields</em></>} description="Shape the CRM to how your team actually sells — no developer needed. Changes apply instantly on every form and board." />
+      <PageHeader title={<>Pipelines &amp; <em>fields</em></>} description="Shape the CRM to how your team actually sells — no developer needed. Changes apply instantly on every form and board." />
 
       <div className="grid gap-8 px-4 pt-6 sm:px-8 xl:grid-cols-2">
         {/* ---------------- pipelines & stages */}

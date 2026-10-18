@@ -28,7 +28,7 @@ export function RolesView({ roles, catalog, mine }: { roles: Role[]; catalog: Re
 
   return (
     <div className="pb-16">
-      <PageHeader title={<>Roles &amp; <em className="italic">permissions</em></>} description="Roles are named bundles of permissions. Every check happens on the server — hiding a button is never the protection. The Owner always has everything.">
+      <PageHeader title={<>Roles &amp; <em>permissions</em></>} description="Roles are named bundles of permissions. Every check happens on the server — hiding a button is never the protection. The Owner always has everything.">
         <button onClick={create} disabled={pending} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-signal px-3.5 text-sm font-medium text-signal-foreground"><Plus className="size-4" /> New role</button>
       </PageHeader>
       <div className="overflow-x-auto px-4 py-6 sm:px-8">
