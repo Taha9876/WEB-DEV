@@ -15,6 +15,7 @@ cp .env.example .env            # then fill DATABASE_URL and ENCRYPTION_KEY (see
 pnpm db:migrate                 # creates tables, the audit-log trigger and Supabase RLS lockdown
 SEED_EMAIL=owner@sunrise.solar pnpm seed   # demo workspace "Sunrise Solar" (prints logins)
 pnpm dev                        # http://localhost:3000 (web app + background worker in one process)
+pnpm demo                       # production build + start — use this for the demo (pages load ~5x faster than dev)
 ```
 
 Demo login: **owner@sunrise.solar / relay-demo-2026**. Other users are printed by the seed: an Admin, a Manager, and Sales staff (one of them on leave).
@@ -27,6 +28,7 @@ Demo login: **owner@sunrise.solar / relay-demo-2026**. Other users are printed b
 | `ENCRYPTION_KEY` | yes | 32 random bytes as base64. Encrypts integration secrets and OAuth tokens at rest. `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` |
 | `APP_URL` | yes | Public base URL. Webhooks are signed against it, so set it to your tunnel URL when testing providers. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | for calendar | OAuth client of type *Web application*; redirect URI `APP_URL/api/integrations/google/callback`. |
+| `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` | for real email | Any free SMTP (Gmail app password: smtp.gmail.com:465; or Brevo). Without them, reports go to a free Ethereal test inbox and show a preview link. |
 | `GROQ_API_KEY` / `GROQ_MODEL` | for AI | Free key from console.groq.com. Enables the Relay Assistant chatbot, lead triage, reply drafting, AI first response and the team briefing. Default model `openai/gpt-oss-120b`. Everything else works without it. |
 
 Twilio, Stripe and Telegram credentials are **not** environment variables. Each workspace enters its own on **Settings → Integrations**, where they are verified against the provider, encrypted, and never sent back to the browser.
@@ -102,6 +104,10 @@ scripts/                seed, scenario tests, browser tests
 | Q5 concurrency | advisory lock per workspace for round-robin; SKIP LOCKED claims; idempotency ledger for webhooks |
 | Q7–Q8 responsive, a11y | mobile sheet navigation, labelled inputs, keyboard drag-and-drop (dnd-kit), status shown by shape plus label, reduced-motion support |
 | Q11 real time | `server/realtime.ts` and `/api/events` (SSE) |
+
+## Email reports
+
+Settings → **Email reports** (or **Email report** on the dashboard): send a daily progress report now, or schedule it every day at a chosen hour and time zone. The report has the live dashboard figures, an AI-written summary and the leads at risk, scoped to the sender's permissions. The worker claims each day's send atomically, so a report goes out once even with several workers.
 
 ## AI features (beyond the brief)
 

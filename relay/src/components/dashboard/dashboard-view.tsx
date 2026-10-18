@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { animate, motion, useInView } from "motion/react";
 import { toast } from "sonner";
-import { AlarmClock, ArrowUpRight, CalendarDays, CircleDollarSign, Eye, GitBranch, Loader2, Settings2, Sparkles, Timer, Users, Zap } from "lucide-react";
+import { AlarmClock, ArrowUpRight, CalendarDays, Mail, CircleDollarSign, Eye, GitBranch, Loader2, Settings2, Sparkles, Timer, Users, Zap } from "lucide-react";
 import { Avatar, fmtDuration } from "@/components/app/primitives";
 import { StatusDot, STATUS_LABEL, type Status } from "@/components/app/status";
 import { saveDashboardPrefsAction, briefingAction } from "@/app/(app)/_actions/dashboard";
@@ -42,7 +42,10 @@ export function DashboardView({ d, name, prefs, canBrief, currency }: { d: D; na
             <p className="text-sm text-muted-foreground">{d.scope === "company" ? "Company-wide · live" : "Your numbers · live"}</p>
             <h1 className="mt-1 font-display text-5xl leading-none md:text-6xl">Good {hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}, <em>{name}</em></h1>
           </div>
+          <div className="flex gap-2">
+          <Link href="/settings/reports" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input px-3 text-sm hover:bg-accent"><Mail className="size-4" /> Email report</Link>
           <button onClick={() => setEditing((e) => !e)} aria-pressed={editing} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-input px-3 text-sm hover:bg-accent"><Settings2 className="size-4" /> Customize</button>
+          </div>
         </div>
         {editing && (
           <motion.fieldset initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="relative mt-5 flex flex-wrap gap-2">

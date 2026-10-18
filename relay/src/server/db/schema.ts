@@ -23,7 +23,7 @@ export const msgDirectionEnum = pgEnum("msg_direction", ["inbound", "outbound"])
 export const msgStatusEnum = pgEnum("msg_status", ["received", "queued", "sending", "sent", "delivered", "read", "failed", "undelivered"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "expired", "failed", "canceled", "refunded", "partially_refunded"]);
 export const apptStatusEnum = pgEnum("appt_status", ["scheduled", "cancelled"]);
-export const providerEnum = pgEnum("provider", ["twilio", "stripe", "google", "telegram"]);
+export const providerEnum = pgEnum("provider", ["twilio", "stripe", "google", "telegram", "email"]);
 export const integrationStatusEnum = pgEnum("integration_status", ["not_connected", "connected", "error"]);
 export const jobStatusEnum = pgEnum("job_status", ["pending", "running", "done", "failed"]);
 
@@ -404,3 +404,17 @@ export const auditLogs = pgTable("audit_logs", {
   after: jsonb("after"),
   createdAt: created(),
 }, (t) => [index("audit_ws_time").on(t.workspaceId, t.createdAt)]);
+
+/* ---------- Email reports ---------- */
+/** Daily progress report schedule: sent once per day at `hour` in `timezone` to `recipients`. */
+export const reportSchedules = pgTable("report_schedules", {
+  id: id(),
+  workspaceId: ws(),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  recipients: text("recipients").array().notNull(),
+  hour: integer("hour").notNull().default(18),
+  timezone: text("timezone").notNull().default("UTC"),
+  enabled: boolean("enabled").notNull().default(true),
+  lastSentAt: ts("last_sent_at"),
+  createdAt: created(),
+}, (t) => [uniqueIndex("report_sched_ws").on(t.workspaceId)]);

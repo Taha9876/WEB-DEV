@@ -115,15 +115,15 @@ export function Smoke({ className = "pointer-events-none fixed inset-0 -z-[5]" }
       gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fbo : null); gl.viewport(0, 0, w, h);
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     };
-    const use = (p: ReturnType<typeof compile>, texel: [number, number]) => { gl.useProgram(p.p); gl.uniform2f(p.u.texel, texel[0], texel[1]); return p.u; };
+    const bindProgram = (p: ReturnType<typeof compile>, texel: [number, number]) => { gl.useProgram(p.p); gl.uniform2f(p.u.texel, texel[0], texel[1]); return p.u; };
 
     const splat = (x: number, y: number, dx: number, dy: number, color: [number, number, number]) => {
       const aspect = canvas.width / canvas.height;
-      let u = use(P.splat, [1 / vel.w, 1 / vel.h]);
+      let u = bindProgram(P.splat, [1 / vel.w, 1 / vel.h]);
       gl.uniform1i(u.uTarget, vel.read.attach(0)); gl.uniform1f(u.aspect, aspect);
       gl.uniform2f(u.point, x, y); gl.uniform3f(u.color, dx, dy, 0); gl.uniform1f(u.radius, (CFG.RADIUS / 100) * (aspect > 1 ? aspect : 1));
       blit(vel.write, vel.w, vel.h); vel.swap();
-      u = use(P.splat, [1 / dye.w, 1 / dye.h]);
+      u = bindProgram(P.splat, [1 / dye.w, 1 / dye.h]);
       gl.uniform1i(u.uTarget, dye.read.attach(0)); gl.uniform1f(u.aspect, aspect);
       gl.uniform2f(u.point, x, y); gl.uniform3f(u.color, ...color); gl.uniform1f(u.radius, (CFG.RADIUS / 100) * (aspect > 1 ? aspect : 1));
       blit(dye.write, dye.w, dye.h); dye.swap();
@@ -143,18 +143,18 @@ export function Smoke({ className = "pointer-events-none fixed inset-0 -z-[5]" }
 
     const step = (dt: number) => {
       const t: [number, number] = [1 / vel.w, 1 / vel.h];
-      let u = use(P.curl, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); blit(crl, vel.w, vel.h);
-      u = use(P.vorticity, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); gl.uniform1i(u.uCurl, crl.attach(1));
+      let u = bindProgram(P.curl, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); blit(crl, vel.w, vel.h);
+      u = bindProgram(P.vorticity, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); gl.uniform1i(u.uCurl, crl.attach(1));
       gl.uniform1f(u.curl, CFG.CURL); gl.uniform1f(u.dt, dt); blit(vel.write, vel.w, vel.h); vel.swap();
-      u = use(P.divergence, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); blit(div, vel.w, vel.h);
-      u = use(P.clear, t); gl.uniform1i(u.uTexture, prs.read.attach(0)); gl.uniform1f(u.value, CFG.PRESSURE); blit(prs.write, vel.w, vel.h); prs.swap();
-      u = use(P.pressure, t); gl.uniform1i(u.uDivergence, div.attach(0));
+      u = bindProgram(P.divergence, t); gl.uniform1i(u.uVelocity, vel.read.attach(0)); blit(div, vel.w, vel.h);
+      u = bindProgram(P.clear, t); gl.uniform1i(u.uTexture, prs.read.attach(0)); gl.uniform1f(u.value, CFG.PRESSURE); blit(prs.write, vel.w, vel.h); prs.swap();
+      u = bindProgram(P.pressure, t); gl.uniform1i(u.uDivergence, div.attach(0));
       for (let i = 0; i < CFG.ITER; i++) { gl.uniform1i(u.uPressure, prs.read.attach(1)); blit(prs.write, vel.w, vel.h); prs.swap(); }
-      u = use(P.gradient, t); gl.uniform1i(u.uPressure, prs.read.attach(0)); gl.uniform1i(u.uVelocity, vel.read.attach(1)); blit(vel.write, vel.w, vel.h); vel.swap();
-      u = use(P.advect, t); gl.uniform2f(u.simTexel, t[0], t[1]);
+      u = bindProgram(P.gradient, t); gl.uniform1i(u.uPressure, prs.read.attach(0)); gl.uniform1i(u.uVelocity, vel.read.attach(1)); blit(vel.write, vel.w, vel.h); vel.swap();
+      u = bindProgram(P.advect, t); gl.uniform2f(u.simTexel, t[0], t[1]);
       gl.uniform1i(u.uVelocity, vel.read.attach(0)); gl.uniform1i(u.uSource, vel.read.attach(0)); gl.uniform1f(u.dt, dt); gl.uniform1f(u.dissipation, CFG.VELOCITY_DISSIPATION);
       blit(vel.write, vel.w, vel.h); vel.swap();
-      u = use(P.advect, [1 / dye.w, 1 / dye.h]); gl.uniform2f(u.simTexel, t[0], t[1]);
+      u = bindProgram(P.advect, [1 / dye.w, 1 / dye.h]); gl.uniform2f(u.simTexel, t[0], t[1]);
       gl.uniform1i(u.uVelocity, vel.read.attach(0)); gl.uniform1i(u.uSource, dye.read.attach(1)); gl.uniform1f(u.dt, dt); gl.uniform1f(u.dissipation, CFG.DENSITY_DISSIPATION);
       blit(dye.write, dye.w, dye.h); dye.swap();
     };
@@ -183,7 +183,7 @@ export function Smoke({ className = "pointer-events-none fixed inset-0 -z-[5]" }
       }
       step(dt);
       gl.disable(gl.BLEND);
-      const u = use(P.display, [1 / canvas.width, 1 / canvas.height]);
+      const u = bindProgram(P.display, [1 / canvas.width, 1 / canvas.height]);
       gl.uniform1i(u.uTexture, dye.read.attach(0));
       gl.uniform1f(u.gain, document.documentElement.classList.contains("dark") ? 1.6 : 1.25);
       blit(null, canvas.width, canvas.height);

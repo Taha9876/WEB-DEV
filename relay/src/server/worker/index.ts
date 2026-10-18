@@ -1,5 +1,6 @@
 import { assignWaiting, escalateDue } from "../domain/leads";
 import { processJobs, reviveStuckJobs } from "./jobs";
+import { queueDueReports } from "../domain/reports";
 
 const g = globalThis as unknown as { __worker?: boolean };
 
@@ -16,6 +17,7 @@ export function startWorker(intervalMs = 1000) {
       await assignWaiting();
       await processJobs();
       if (++n % 30 === 0) await reviveStuckJobs();
+      if (n % 60 === 1) await queueDueReports(); // once a minute
     } catch (e) {
       console.error("[worker]", e);
     } finally {

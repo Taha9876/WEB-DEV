@@ -285,8 +285,7 @@ export async function assignWaiting(limit = 25) {
 
 /** F3.7 — every lead at risk, with the reason. */
 export async function recoveryQueue(workspaceId: string, ownerId?: string) {
-  const s = await getSettings(workspaceId);
-  const rows = await db.execute<{
+  const [s, rows] = await Promise.all([getSettings(workspaceId), db.execute<{
     id: string; status: string; owner_id: string | null; owner_name: string | null; contact_id: string; contact_name: string;
     source: string; escalation_count: number; ack_deadline: Date | null; exhausted_at: Date | null; last_touch: Date; created_at: Date;
   }>(sql`
@@ -302,9 +301,9 @@ export async function recoveryQueue(workspaceId: string, ownerId?: string) {
         l.status = 'unassigned'
         or (l.status = 'assigned' and (l.ack_deadline < now() or l.exhausted_at is not null))
         or l.escalation_count >= 2
-        or coalesce(l.last_action_at, l.created_at) < now() - make_interval(secs => ${s.idleSeconds})
+        or coalesce(l.last_action_at, l.created_at) < now() - make_interval(secs => coalesce((select idle_seconds from lead_settings where workspace_id = ${workspaceId}), 86400))
       )
-    order by l.created_at asc`);
+    order by l.created_at asc`)]);
   const now = Date.now();
   return rows.map((r) => {
     const reasons: string[] = [];

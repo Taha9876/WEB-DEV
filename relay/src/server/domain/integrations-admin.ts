@@ -24,6 +24,10 @@ export const LIMITS: Record<Provider, { can: string[]; cannot: string[] }> = {
     can: ["Each employee connects their own Google Calendar", "Check free/busy and book, reschedule or cancel events"],
     cannot: ["Book someone who hasn't connected their calendar", "Keep working after a user revokes access (they must reconnect)", "Unverified test apps accept only listed test users; refresh tokens may expire after 7 days"],
   },
+  email: {
+    can: ["Send the daily progress report now or on a daily schedule", "Use any SMTP provider (Gmail app password, Brevo…) via SMTP_* settings"],
+    cannot: ["Deliver to real inboxes without SMTP settings — it then uses a free Ethereal test inbox with a preview link"],
+  },
   telegram: {
     can: ["Alert the new owner when a lead escalates, with the lead, source, reason and a link", "Per-employee destination via the bot deep-link or a chat ID"],
     cannot: ["Message someone who hasn't started a chat with the bot", "Receive the deep-link on a non-HTTPS local URL (use manual chat ID locally)"],
@@ -58,12 +62,12 @@ export async function overview(ctx: Ctx) {
   });
 }
 
-const fields: Record<Exclude<Provider, "google">, string[]> = {
+const fields: Record<Exclude<Provider, "google" | "email">, string[]> = {
   twilio: ["accountSid", "authToken", "from"], stripe: ["secretKey", "webhookSecret"], telegram: ["botToken"],
 };
 
 /** I5.2 / I5.3 / I5.7 — validates credentials against the provider before saving; secrets are encrypted, audit stores only masked tails. */
-export async function connect(ctx: Ctx, provider: Exclude<Provider, "google">, input: Record<string, string>) {
+export async function connect(ctx: Ctx, provider: Exclude<Provider, "google" | "email">, input: Record<string, string>) {
   ctx.require("integrations.manage", "manage integrations");
   const v = Object.fromEntries(fields[provider].map((k) => [k, String(input[k] ?? "").trim()]));
   const missing = fields[provider].filter((k) => !v[k]);

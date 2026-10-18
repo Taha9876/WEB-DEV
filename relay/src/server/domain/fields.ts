@@ -101,9 +101,13 @@ async function assertPipeline(ctx: Ctx, id: string, tx: Tx | typeof db = db) {
 }
 
 export async function listPipelines(workspaceId: string) {
-  const ps = await db.select().from(pipelines).where(eq(pipelines.workspaceId, workspaceId)).orderBy(asc(pipelines.position), asc(pipelines.createdAt));
-  const ss = ps.length ? await db.select().from(stages).where(inArray(stages.pipelineId, ps.map((p) => p.id))).orderBy(asc(stages.position)) : [];
-  const req = ss.length ? await db.select().from(stageRequiredFields).where(inArray(stageRequiredFields.stageId, ss.map((s) => s.id))) : [];
+  // Three reads in parallel, all scoped by workspace (one round trip instead of three).
+  const [ps, ss, req] = await Promise.all([
+    db.select().from(pipelines).where(eq(pipelines.workspaceId, workspaceId)).orderBy(asc(pipelines.position), asc(pipelines.createdAt)),
+    db.select().from(stages).where(eq(stages.workspaceId, workspaceId)).orderBy(asc(stages.position)),
+    db.select({ stageId: stageRequiredFields.stageId, fieldId: stageRequiredFields.fieldId }).from(stageRequiredFields)
+      .innerJoin(stages, eq(stages.id, stageRequiredFields.stageId)).where(eq(stages.workspaceId, workspaceId)),
+  ]);
   return ps.map((p) => ({ ...p, stages: ss.filter((s) => s.pipelineId === p.id).map((s) => ({ ...s, requiredFieldIds: req.filter((r) => r.stageId === s.id).map((r) => r.fieldId) })) }));
 }
 

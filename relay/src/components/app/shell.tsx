@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
-  Activity, AlarmClock, Building2, CalendarDays, ChevronsUpDown, Contact2, Columns3, Inbox, LayoutDashboard, LogOut,
+  Activity, AlarmClock, Building2, Mail, CalendarDays, ChevronsUpDown, Contact2, Columns3, Inbox, LayoutDashboard, LogOut,
   Menu, Plug, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, Users, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/landing/landing";
@@ -42,6 +42,7 @@ const NAV: { title?: string; items: Item[] }[] = [
     { href: "/settings/pipelines", label: "Pipelines & fields", icon: SlidersHorizontal, perm: "config.manage" },
     { href: "/settings/rules", label: "Assignment rules", icon: Settings2, perm: "leads.rules" },
     { href: "/settings/integrations", label: "Integrations", icon: Plug },
+    { href: "/settings/reports", label: "Email reports", icon: Mail },
     { href: "/audit", label: "Audit log", icon: ScrollText, perm: "audit.view" },
   ] },
 ];

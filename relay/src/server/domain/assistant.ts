@@ -39,7 +39,7 @@ const TOOLS: ToolDef[] = [
 const iso = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString() : null);
 const money = (cents: number | null | undefined, cur = "USD") => (cents == null ? "hidden (no permission)" : `${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })} ${cur.toUpperCase()}`);
 
-async function run(ctx: Ctx, name: string, args: Record<string, unknown>): Promise<unknown> {
+export async function run(ctx: Ctx, name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case "workspace_overview": {
       const d = await dashboard(ctx);

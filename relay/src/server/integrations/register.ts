@@ -2,3 +2,4 @@
 import "../domain/messaging";
 import "../domain/ai-features";
 import "./telegram";
+import "../domain/reports";

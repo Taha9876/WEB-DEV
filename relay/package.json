@@ -4,14 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
     "test:leads": "tsx scripts/scenario-leads.ts",
     "test:e2e": "node scripts/e2e-smoke.mjs",
     "db:migrate": "drizzle-kit migrate",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo": "next build && next start"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -33,6 +34,7 @@
     "motion": "^14.3.0",
     "next": "15.5.28",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.1.2",
     "postgres": "^3.4.9",
     "radix-ui": "^1.8.1",
     "react": "19.1.0",
@@ -52,6 +54,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.186.0",
