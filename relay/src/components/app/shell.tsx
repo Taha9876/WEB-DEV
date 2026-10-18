@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import {
-  Activity, AlarmClock, CalendarDays, ChevronsUpDown, Contact2, Columns3, Inbox, LayoutDashboard, LogOut,
+  Activity, AlarmClock, Building2, CalendarDays, ChevronsUpDown, Contact2, Columns3, Inbox, LayoutDashboard, LogOut,
   Menu, Plug, ScrollText, Settings2, ShieldCheck, SlidersHorizontal, Users, Zap,
 } from "lucide-react";
 import { Logo } from "@/components/landing/landing";
@@ -28,6 +28,7 @@ const NAV: { title?: string; items: Item[] }[] = [
   ] },
   { title: "CRM", items: [
     { href: "/contacts", label: "Contacts", icon: Contact2, perm: "crm.view" },
+    { href: "/companies", label: "Companies", icon: Building2, perm: "crm.view" },
     { href: "/pipeline", label: "Pipeline", icon: Columns3, perm: "crm.view" },
     { href: "/appointments", label: "Appointments", icon: CalendarDays, perm: "crm.view" },
   ] },

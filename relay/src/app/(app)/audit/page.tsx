@@ -3,7 +3,7 @@ import { and, asc, desc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import { ScrollText } from "lucide-react";
 import { requireCtx } from "@/server/context";
 import { db, schema } from "@/server/db";
-import { PageHeader, EmptyState, Avatar } from "@/components/app/primitives";
+import { PageHeader, EmptyState, Avatar } from "@/components/app/static";
 import { AuditFilters } from "@/components/settings/audit-filters";
 import { dateTime } from "@/lib/format";
 

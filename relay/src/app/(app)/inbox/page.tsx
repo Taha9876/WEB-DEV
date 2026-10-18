@@ -4,7 +4,7 @@ import { requireCtx } from "@/server/context";
 import { inbox } from "@/server/domain/messaging";
 import { getContactView } from "@/server/domain/crm";
 import { ConversationPanel } from "@/components/inbox/conversation-panel";
-import { Avatar, EmptyState } from "@/components/app/primitives";
+import { Avatar, EmptyState } from "@/components/app/static";
 import { relative } from "@/lib/format";
 
 export const metadata = { title: "Inbox" };

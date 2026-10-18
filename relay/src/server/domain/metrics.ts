@@ -21,12 +21,12 @@ export async function dashboard(ctx: Ctx) {
   const ws = ctx.workspaceId, me = ctx.userId;
   const company = seesAll(ctx);
   const tz = ctx.user.timezone;
-  const today = startOfToday(tz), month = startOfMonth(tz);
+  const today = startOfToday(tz).toISOString(), month = startOfMonth(tz).toISOString();
   const own = (col: unknown) => (company ? sql`true` : sql`${col} = ${me}`);
   const L = schema.leads;
 
   const [[newToday], [ttfr], [esc], byStage, [money], avail, appts, recovery] = await Promise.all([
-    db.select({ n: sql<number>`count(*)::int` }).from(L).where(and(eq(L.workspaceId, ws), sql`${L.createdAt} >= ${today}`, own(L.ownerId))),
+    db.select({ n: sql<number>`count(*)::int` }).from(L).where(and(eq(L.workspaceId, ws), sql`${L.createdAt} >= ${today}::timestamptz`, own(L.ownerId))),
     db.select({ avg: sql<number | null>`avg(extract(epoch from ${L.firstAcknowledgedAt} - ${L.firstAssignedAt}))::float`, n: sql<number>`count(*)::int` })
       .from(L).where(and(eq(L.workspaceId, ws), sql`${L.firstAcknowledgedAt} is not null and ${L.firstAssignedAt} is not null`, sql`${L.createdAt} >= now() - interval '30 days'`, own(L.ownerId))),
     db.select({ n: sql<number>`count(distinct ${schema.leadAssignments.leadId})::int` }).from(schema.leadAssignments)
@@ -40,9 +40,9 @@ export async function dashboard(ctx: Ctx) {
           .orderBy(schema.pipelines.position, schema.stages.position)
       : Promise.resolve(null),
     db.select({
-      collected: sql<number>`coalesce(sum(case when ${schema.payments.status} in ('paid','partially_refunded','refunded') and ${schema.payments.paidAt} >= ${month} then ${schema.payments.amountCents} - ${schema.payments.refundedCents} end), 0)::bigint`.mapWith(Number),
+      collected: sql<number>`coalesce(sum(case when ${schema.payments.status} in ('paid','partially_refunded','refunded') and ${schema.payments.paidAt} >= ${month}::timestamptz then ${schema.payments.amountCents} - ${schema.payments.refundedCents} end), 0)::bigint`.mapWith(Number),
       pending: sql<number>`coalesce(sum(case when ${schema.payments.status} = 'pending' then ${schema.payments.amountCents} end), 0)::bigint`.mapWith(Number),
-      paidCount: sql<number>`count(*) filter (where ${schema.payments.status} in ('paid','partially_refunded','refunded') and ${schema.payments.paidAt} >= ${month})::int`,
+      paidCount: sql<number>`count(*) filter (where ${schema.payments.status} in ('paid','partially_refunded','refunded') and ${schema.payments.paidAt} >= ${month}::timestamptz)::int`,
     }).from(schema.payments).where(and(eq(schema.payments.workspaceId, ws), own(schema.payments.requestedBy))),
     db.select({ id: schema.users.id, name: schema.users.name, status: schema.users.status,
       open: sql<number>`(select count(*)::int from leads l where l.owner_id = ${schema.users.id} and l.status in ('assigned','acknowledged'))` })

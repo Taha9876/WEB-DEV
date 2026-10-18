@@ -20,7 +20,7 @@ export async function listLeads(ctx: Ctx, filter: LeadFilter = "open", page = 1,
   if (filter === "acknowledged") conds.push(eq(leads.status, "acknowledged"));
   if (filter === "closed") conds.push(eq(leads.status, "closed"));
   // Drill-downs from the dashboard use exactly the dashboard's definitions (F5.2).
-  if (filter === "today") conds.push(sql`${leads.createdAt} >= ${startOfToday(ctx.user.timezone)}`);
+  if (filter === "today") conds.push(sql`${leads.createdAt} >= ${startOfToday(ctx.user.timezone).toISOString()}::timestamptz`);
   if (filter === "escalated") conds.push(sql`exists (select 1 from lead_assignments a where a.lead_id = ${leads.id} and a.kind = 'escalation' and a.assigned_at >= now() - interval '24 hours'${seesAll(ctx) ? sql`` : sql` and a.user_id = ${ctx.userId}`})`);
 
   const rows = await db

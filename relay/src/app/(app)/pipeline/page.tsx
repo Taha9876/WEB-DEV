@@ -4,7 +4,7 @@ import { db, schema } from "@/server/db";
 import { listPipelines, fieldsFor } from "@/server/domain/fields";
 import { listBoard } from "@/server/domain/crm";
 import { Board } from "@/components/crm/board";
-import { PageHeader, EmptyState } from "@/components/app/primitives";
+import { PageHeader, EmptyState } from "@/components/app/static";
 import { Columns3 } from "lucide-react";
 
 export const metadata = { title: "Pipeline" };

@@ -31,7 +31,7 @@ export function Board(p: {
 }) {
   const router = useRouter();
   const [cards, setCards] = useState(p.cards);
-  useEffect(() => setCards(p.cards), [p.cards]); // realtime refresh replaces local state
+  useEffect(() => { setCards(p.cards); }, [p.cards]); // realtime refresh replaces local state
   const [dragging, setDragging] = useState<Card | null>(null);
   const [open, setOpen] = useState<{ card: Card; missing?: string[]; targetStage?: string } | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor));
@@ -72,9 +72,9 @@ export function Board(p: {
               </select>
             )}
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">Drag cards between stages. Stages with required fields won&apos;t accept a card until they&apos;re filled.</p>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">Drag cards between stages. Stages with required fields won&apos;t accept a card until they&apos;re filled.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           <form className="relative" action={(f) => router.push(`/pipeline?p=${p.pipeline.id}&q=${encodeURIComponent(String(f.get("q") ?? ""))}&owner=${p.owner}`)}>
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input name="q" defaultValue={p.q} placeholder="Search deals" aria-label="Search deals" className="h-9 w-44 rounded-lg border border-input bg-surface pl-8 pr-3 text-sm outline-none focus:border-signal/60" />
@@ -91,7 +91,7 @@ export function Board(p: {
         </div>
       </div>
 
-      <DndContext sensors={sensors} onDragStart={onStart} onDragEnd={onEnd} onDragCancel={() => setDragging(null)}>
+      <DndContext id="pipeline-board" sensors={sensors} onDragStart={onStart} onDragEnd={onEnd} onDragCancel={() => setDragging(null)}>
         <div className="flex flex-1 gap-3 overflow-x-auto p-4 sm:px-8" role="list" aria-label="Stages">
           {p.pipeline.stages.map((s) => (
             <Column key={s.id} stage={s} cards={byStage[s.id] ?? []} fields={p.fields} canValue={p.can.value}

@@ -3,7 +3,7 @@ import { AlarmClock, ArrowUpRight } from "lucide-react";
 import { requireCtx } from "@/server/context";
 import { recoveryQueue } from "@/server/domain/leads";
 import { seesAll } from "@/server/domain/leads-read";
-import { PageHeader, EmptyState, SourceBadge, Avatar } from "@/components/app/primitives";
+import { PageHeader, EmptyState, SourceBadge, Avatar } from "@/components/app/static";
 import { relative } from "@/lib/format";
 
 export const metadata = { title: "Recovery queue" };

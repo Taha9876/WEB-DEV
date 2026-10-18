@@ -26,7 +26,7 @@ export function ConversationPanel({ contactId, optedOut, hasPhone, conversations
   const [drafting, startDraft] = useTransition();
   const router = useRouter();
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "nearest" }), [msgs.length]);
+  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [msgs.length]);
 
   const send = () => start(async () => {
     const r = await sendMessageAction(contactId, text, aiUsed);

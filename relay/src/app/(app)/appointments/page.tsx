@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { requireCtx } from "@/server/context";
 import { upcoming } from "@/server/domain/appointments";
-import { PageHeader, EmptyState, Avatar } from "@/components/app/primitives";
+import { PageHeader, EmptyState, Avatar } from "@/components/app/static";
 
 export const metadata = { title: "Appointments" };
 
