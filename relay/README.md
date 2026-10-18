@@ -33,6 +33,15 @@ Demo login: **owner@sunrise.solar / relay-demo-2026**. Other users are printed b
 
 Twilio, Stripe and Telegram credentials are **not** environment variables. Each workspace enters its own on **Settings → Integrations**, where they are verified against the provider, encrypted, and never sent back to the browser.
 
+### Deploying on Vercel
+
+Live demo: **https://web-dev-ashen-beta.vercel.app**
+
+1. In the Vercel project, set **Root Directory** to `relay`.
+2. Under Settings → Environment Variables, add the same values as `.env`. **`ENCRYPTION_KEY` must be identical**, or saved integrations can't be decrypted. Set `APP_URL=https://web-dev-ashen-beta.vercel.app`. Leave `GOOGLE_REDIRECT_URL` unset, so it defaults to the Vercel callback.
+3. Vercel functions don't keep background loops alive, so run the worker separately against the same database: `pnpm worker`. That can be a laptop during the demo or any always-on machine. It runs the escalation timers, message and alert jobs and scheduled reports. Running it more than once is safe, because jobs are claimed with row locks.
+4. Webhooks need no tunnel: the Telegram and Stripe webhooks are registered at the Vercel URL automatically. For Google, add `https://web-dev-ashen-beta.vercel.app/api/integrations/google/callback` as an authorised redirect URI.
+
 ### Exposing webhooks locally
 
 ```bash
