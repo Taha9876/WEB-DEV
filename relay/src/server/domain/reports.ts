@@ -45,9 +45,8 @@ export async function buildReport(ctx: Ctx) {
           { role: "user", content: JSON.stringify({ date, overview, recovery: recovery.slice(0, 15), team, payments }).slice(0, 14000) },
         ] });
       // The email already has a subject and title: drop any the model adds, and stray dividers.
-      narrative = (r.choices[0]?.message.content ?? "").split("
-").filter((l) => !/^\s*(\*\*)?subject:/i.test(l) && !/^\s*-{3,}\s*$/.test(l)).join("
-").trim();
+      narrative = (r.choices[0]?.message.content ?? "").split("\n")
+        .filter((l) => !/^\s*(\*\*)?subject:/i.test(l) && !/^\s*-{3,}\s*$/.test(l)).join("\n").trim();
     } catch { /* fall back to numbers only */ }
   }
   const o = overview as Record<string, unknown>;
