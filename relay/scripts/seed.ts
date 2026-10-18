@@ -63,7 +63,7 @@ async function main() {
     ["Hamza", "Javed", "+923001110007", "Lahore", 45000, "manual", "Wants a site survey next week."],
     ["Ayesha", "Siddiqui", "+923001110008", "Islamabad", 27000, "web_form", "Do you offer financing?"],
   ] as const;
-  const contacts = [];
+  const contacts: (typeof schema.contacts.$inferSelect)[] = [];
   for (const [first, last, phone, city, bill, , ] of people)
     contacts.push((await db.insert(schema.contacts).values({ workspaceId: ws.id, firstName: first, lastName: last, phone, custom: { city, ...(bill ? { monthly_bill: bill } : {}), owns_property: true }, tags: bill > 50000 ? ["high-bill"] : [] }).returning())[0]);
 
