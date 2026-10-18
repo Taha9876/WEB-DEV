@@ -78,7 +78,7 @@ function HeroFold() {
   const p = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.6 });
   const G = GEO[o];
   const scale = Math.min((vw * (o === "portrait" ? 0.9 : 0.82)) / G.W, (vh * 0.74) / G.H, 1);
-  const screenH = o === "portrait" ? G.H / 2 - (G.f + G.bz) : G.H - 2 * (G.f + G.bz);
+  const screenH = G.H - 2 * (G.f + G.bz); // full display height (both halves when open)
   const [contentH, setContentH] = useState(o === "portrait" ? 1500 : 900);
 
   // Phases: rise (0–.14) · open (.10–.36) · scroll the screen (.38–.78) · fold shut (.82–.97)
